@@ -22,6 +22,8 @@
 
 #include "F1Spirit-auxiliar.h"
 
+#include "debug.h"
+
 #ifdef KITSCHY_DEBUG_MEMORY
 #include "debug_memorymanager.h"
 #endif
@@ -104,7 +106,7 @@ SDL_Surface *load_bmp_font(char *filename, int first, int last)
 {
 	SDL_Surface *bitmap_font = 0;
 	SDL_Surface *sfc = IMG_Load(filename);
-
+	
 	if (sfc != 0) {
 		int w = (sfc->w / (last - first));
 		bitmap_font = SDL_CreateRGBSurface(SDL_SWSURFACE, w * 256, sfc->h, 32, RMASK, GMASK, BMASK, AMASK);

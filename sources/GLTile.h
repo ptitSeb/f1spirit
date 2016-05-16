@@ -45,6 +45,8 @@ class GLTile
 		void draw_cmc(float dx, float dy, float dz, float angle, float zoom);
 		void draw_cmc(float r, float g, float b, float a);
 		void draw_cmc(float r, float g, float b, float a, float dx, float dy, float dz, float angle, float zoom);
+		
+		bool tile_in_bbox(int bbx, int bby, int bbw, int bbh);
 
 		int get_dx(void) {
 			return g_dx;

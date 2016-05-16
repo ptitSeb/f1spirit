@@ -7,8 +7,13 @@
 #include "stdlib.h"
 #include "string.h"
 
+#ifdef HAVE_GLES
+#include <GLES/gl.h>
+#include <GLES/glu.h>
+#else
 #include "GL/gl.h"
 #include "GL/glu.h"
+#endif
 #include "SDL.h"
 
 #include "F1Spirit.h"
@@ -68,6 +73,12 @@ CTrack::CTrack(void)
 
 	water_tiles_found = false;
 	rock_tiles_found = false;
+	
+	rock_coord = (CRockCoord*)malloc(sizeof(CRockCoord)*1024);
+	numrock = 0;
+	
+	rock_x = (int*)malloc(sizeof(int)*1);
+	rock_maxx = 0;
 
 	sign_list_geenrated_p = false;
 } 
@@ -87,6 +98,12 @@ CTrack::CTrack(int tn, FILE *fp, List<GLTile> *tiles)
 	background_tex = 0;
 	textures_loaded = -1;
 	track_number = tn;
+
+	rock_coord = (CRockCoord*)malloc(sizeof(CRockCoord)*1024);
+	numrock = 0;
+
+	rock_x = (int*)malloc(sizeof(int)*1);
+	rock_maxx = 0;
 
 	init_time = SDL_GetTicks();
 
@@ -218,9 +235,13 @@ CTrack::~CTrack()
 
 	while (!water_tiles.EmptyP())
 		water_tiles.ExtractIni();
-
+	/*
 	while (!rock_tiles.EmptyP())
 		rock_tiles.ExtractIni();
+	*/
+	free(rock_coord);
+	
+	free(rock_x);
 
 	for (i = 0;i < n_parts_v;i++) {
 		for (j = 0;j < n_parts_h;j++) {
@@ -246,7 +267,7 @@ CTrack::~CTrack()
 
 	if (background_sfc != 0) {
 		SDL_FreeSurface(background_sfc);
-		glDeleteTextures(1, &background_tex);
+		TM_glDeleteTextures(1, &background_tex);
 	} 
 
 	n_parts_h = 0;
@@ -288,19 +309,12 @@ void CTrack::cycle(void)
 				} 
 
 				t->qx[0] = t->x - w * vy;
-
 				t->qy[0] = t->y + w * vx;
-
 				t->qx[1] = t->x + w * vy;
-
 				t->qy[1] = t->y - w * vx;
-
 				t->qx[2] = t->x2 - w * vy;
-
 				t->qy[2] = t->y2 + w * vx;
-
 				t->qx[3] = t->x2 + w * vy;
-
 				t->qy[3] = t->y2 - w * vx;
 			} 
 
@@ -382,27 +396,17 @@ void CTrack::draw(SDL_Rect *vp, float x, float y, float zoom, List<CPlacedGLTile
 
 	/* Side Road Textures: */
 	GLuint *lrt;
-
 	GLuint *lrt2;
-
 	GLuint *rrt;
-
 	GLuint *rrt2;
 
 	lrt = new GLuint[1];
-
 	lrt[0] = lroad_textures[0]->get_texture(0);
-
 	lrt2 = new GLuint[1];
-
 	lrt2[0] = lroad_textures[1]->get_texture(0);
-
 	rrt = new GLuint[1];
-
 	rrt[0] = lroad_textures[0]->get_texture(0);
-
 	rrt2 = new GLuint[1];
-
 	rrt2[0] = rroad_textures[1]->get_texture(0);
 
 	GLuint *d_lrt, *d_rrt;
@@ -430,16 +434,71 @@ void CTrack::draw(SDL_Rect *vp, float x, float y, float zoom, List<CPlacedGLTile
 	} 
 
 	screen_rad /= zoom;
-
 	// screen_rad*=2;
-
 	part_x = int(x / part_h);
-
 	part_y = int(y / part_v);
-
 	part_neighbors = int(((part_rad + screen_rad) / max(part_h, part_v)) + 1);
 
+	#ifdef HAVE_GLES
+	glClear(GL_DEPTH_BUFFER_BIT);
+	glEnable(GL_BLEND);
+	glEnable(GL_ALPHA_TEST);
+	glEnable(GL_DEPTH_TEST);
+	glDepthMask(GL_TRUE);
+	glAlphaFunc( GL_GREATER, 0.0f );
+	glEnable(GL_COLOR_MATERIAL);
+	#endif
 
+	tmp2 = (screen_rad + part_rad) * (screen_rad + part_rad);
+
+	#ifdef HAVE_GLES
+	#define MAX_TM	16384
+	GLfloat	*tm_vtx=new GLfloat[MAX_TM*3];
+	GLfloat *tm_col=new GLfloat[MAX_TM*4];
+	GLfloat tm_curcol[4];
+	GLushort *tm_indices=new GLushort[MAX_TM*6/4];
+	int	tm_idx, tm_ids;
+	tm_idx = 0;
+	tm_ids = 0;
+	#endif
+
+	#ifdef HAVE_GLES
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_ALPHA_TEST);
+	glDisable(GL_BLEND);
+	glDepthMask(GL_TRUE);
+	glesSpecial(true);
+	#endif
+	for (k = 8;k >= 0;k--) 
+	{
+
+		for (i = max(part_y - part_neighbors, 0);i < n_parts_v && i < part_y + part_neighbors;i++) {
+			for (j = max(part_x - part_neighbors, 0);j < n_parts_h && j < part_x + part_neighbors;j++) {
+				if (!background[i][j][k].EmptyP()) {
+					//     d=float(sqrt((x-(j*part_h+part_h/2))*(x-(j*part_h+part_h/2))+(y-(i*part_v+part_v/2))*(y-(i*part_v+part_v/2))));
+					//     if ((d-part_rad)<screen_rad) {
+					d = (x - (j * part_h + part_h / 2)) * (x - (j * part_h + part_h / 2)) + (y - (i * part_v + part_v / 2)) * (y - (i * part_v + part_v / 2));
+
+					if (d < tmp2) {
+						l3.Instance(background[i][j][k]);
+						l3.Rewind();
+
+						while (l3.Iterate(rpt)) {
+							rpt->draw(float(start_x), float(start_y), /*0.0f*/k*-8.0f, 0, 1);
+						}
+					} 
+				} 
+			} 
+		} 
+	}
+	#ifdef HAVE_GLES
+	glesSpecial(false);
+	#endif
+	#ifdef HAVE_GLES
+	glDisable(GL_ALPHA_TEST);
+	glDisable(GL_BLEND);
+	glDepthMask(GL_FALSE);
+	#endif
 	/* Draw the background: */
 	if (background_type != 0) {
 		glEnable(GL_COLOR_MATERIAL);
@@ -450,6 +509,17 @@ void CTrack::draw(SDL_Rect *vp, float x, float y, float zoom, List<CPlacedGLTile
 		glColor4f(1, 1, 1, 1);
 		glNormal3f(0.0, 0.0, 1.0);
 
+		#ifdef HAVE_GLES
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+		GLfloat tex[] = {0, 0  ,  0, float(dy) / 8  ,  float(dx) / 8, float(dy) / 8  ,  float(dx) / 8, 0 };
+		GLfloat vtx[] = {float(start_x), float(start_y)  , float(start_x), float(start_y + dy*8)  ,   float(start_x + dx*8), float(start_y + dy*8)  ,  float(start_x + dx*8), float(start_y) };
+		glVertexPointer(2, GL_FLOAT, 0, vtx);
+		glTexCoordPointer(2, GL_FLOAT, 0, tex);
+		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+		glDisableClientState(GL_VERTEX_ARRAY);
+		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+		#else
 		glBegin(GL_QUADS);
 		glTexCoord2f(0, 0);
 		glVertex3f(float(start_x), float(start_y), 0);
@@ -464,27 +534,33 @@ void CTrack::draw(SDL_Rect *vp, float x, float y, float zoom, List<CPlacedGLTile
 		glVertex3f(float(start_x + dx*8), float(start_y), 0);
 
 		glEnd();
+		#endif
 	}
+	#ifdef HAVE_GLES
+	glEnable(GL_BLEND);
+	glesSpecial(true);
+	#endif
+	for (k = 8;k >= 0;k--) {
 
-	tmp2 = (screen_rad + part_rad) * (screen_rad + part_rad);
-
-	for (k = 0;k < 9;k++) {
-
-		tm_l.Instance(tyre_marks);
+/*		tm_l.Instance(tyre_marks);
 		tm_l.Rewind();
-
+*/
 		road_position = -get_length();
 		l2.Instance(road);
 		l2.Rewind();
+		
 
-		while (l2.Iterate(rp) &&
-		        tm_l.Iterate(tm_l2)) {
+/*		while (l2.Iterate(rp) &&
+		        tm_l.Iterate(tm_l2)) {*/
+		while (l2.Iterate(rp)) {
 			if ((rp->z1 <= k*( -8) && rp->z1 > (k + 1)*( -8) && rp->z1 >= rp->z2) ||
 			        (rp->z2 <= k*( -8) && rp->z2 > (k + 1)*( -8) && rp->z1 < rp->z2)) {
 				rp->get_bbox(&xr, &yr, &wr, &hr);
-				d = float(sqrt((x - (xr + wr / 2)) * (x - (xr + wr / 2)) + (y - (yr + hr / 2)) * (y - (yr + hr / 2))));
+				//d = float(sqrt((x - (xr + wr / 2)) * (x - (xr + wr / 2)) + (y - (yr + hr / 2)) * (y - (yr + hr / 2))));
+				//if ((d - (wr + hr)) < screen_rad) {
+				d = ((x - (xr + wr / 2)) * (x - (xr + wr / 2)) + (y - (yr + hr / 2)) * (y - (yr + hr / 2)));
 
-				if ((d - (wr + hr)) < screen_rad) {
+				if (d < (screen_rad+(wr + hr))*(screen_rad+(wr + hr))) {
 
 					d_lrt = 0;
 
@@ -516,7 +592,20 @@ void CTrack::draw(SDL_Rect *vp, float x, float y, float zoom, List<CPlacedGLTile
 						} // if
 					} // if
 
-				} 
+				}
+				road_position += rp->get_length();
+			} 
+		}
+	}
+	#ifdef HAVE_GLES
+	glesSpecial(false);
+	glDepthMask(GL_FALSE);
+	#endif
+	{	//no for k here, not "k" dependant.
+
+		tm_l.Instance(tyre_marks);
+		tm_l.Rewind();
+		while (tm_l.Iterate(tm_l2)) {
 
 				/* tyre marks: */
 				tm_l2->Rewind();
@@ -532,49 +621,73 @@ void CTrack::draw(SDL_Rect *vp, float x, float y, float zoom, List<CPlacedGLTile
 						a = 1;
 
 					a = 1 - a;
-
+					#ifdef HAVE_GLES
+					tm_curcol[0]=tm->r; tm_curcol[1]=tm->g; tm_curcol[2]=tm->b; tm_curcol[3]=a*0.75f;
+					#else
 					glNormal3f(0.0, 0.0, 1.0);
 
 					glColor4f(tm->r, tm->g, tm->b, a*0.75F);
+					#endif
 
 					if (tm->t > 0) {
 						//      glBegin(GL_LINES);
 						//      glVertex3f(start_x+tm->x,start_y+tm->y,0);
 						//      glVertex3f(start_x+tm->x2,start_y+tm->y2,0);
 						//      glEnd();
-						glBegin(GL_QUADS);
-						glVertex3f(start_x + tm->qx[0], start_y + tm->qy[0], tm->z);
-						glVertex3f(start_x + tm->qx[1], start_y + tm->qy[1], tm->z);
-						glVertex3f(start_x + tm->qx[3], start_y + tm->qy[3], tm->z2);
-						glVertex3f(start_x + tm->qx[2], start_y + tm->qy[2], tm->z2);
-						glEnd();
+						#ifdef HAVE_GLES
+						#define glVertex3f(a, b, c) \
+							tm_vtx[tm_idx*3+0]=a; tm_vtx[tm_idx*3+1]=b; tm_vtx[tm_idx*3+2]=c; \
+							memcpy(tm_col+tm_idx*4, tm_curcol, 4*sizeof(GLfloat)); \
+							tm_idx++
+						#define GL_QUADS	0
+						#define glBegin(a)
+						#define glEnd()	tm_indices[tm_ids++]=tm_idx-4; tm_indices[tm_ids++]=tm_idx-3; tm_indices[tm_ids++]=tm_idx-2; \
+							tm_indices[tm_ids++]=tm_idx-2; tm_indices[tm_ids++]=tm_idx-1; tm_indices[tm_ids++]=tm_idx-4; \
+							if (tm_ids>MAX_TM*6/4-20) { \
+								glEnableClientState(GL_VERTEX_ARRAY); \
+								glEnableClientState(GL_COLOR_ARRAY); \
+								glVertexPointer(3, GL_FLOAT, 0, tm_vtx); \
+								glColorPointer(4, GL_FLOAT, 0, tm_col); \
+								glNormal3f(0.0, 0.0, 1.0); \
+								glDrawElements(GL_TRIANGLES, tm_ids, GL_UNSIGNED_SHORT, tm_indices); \
+								glDisableClientState(GL_COLOR_ARRAY); \
+								glDisableClientState(GL_VERTEX_ARRAY); \
+								tm_ids=0; tm_idx=0; \
+							}
+						#endif
+						if ((tm->z <= k*( -8) && tm->z > (k + 1)*( -8) && tm->z >= tm->z2) ||
+			        		    (tm->z2 <= k*( -8) && tm->z2 > (k + 1)*( -8) && tm->z < tm->z2)) {
+							glBegin(GL_QUADS);
+							glVertex3f(start_x + tm->qx[0], start_y + tm->qy[0], tm->z);
+							glVertex3f(start_x + tm->qx[1], start_y + tm->qy[1], tm->z);
+							glVertex3f(start_x + tm->qx[3], start_y + tm->qy[3], tm->z2);
+							glVertex3f(start_x + tm->qx[2], start_y + tm->qy[2], tm->z2);
+							glEnd();
+						}
+						#ifdef HAVE_GLES
+						#undef GL_QUADS
+						#undef glVertex3f
+						#undef glBegin
+						#undef glEnd
+						#endif
 					} 
-				} 
+				}
 
 			} 
 
-			road_position += rp->get_length();
-		} 
-
-		for (i = max(part_y - part_neighbors, 0);i < n_parts_v && i < part_y + part_neighbors;i++) {
-			for (j = max(part_x - part_neighbors, 0);j < n_parts_h && j < part_x + part_neighbors;j++) {
-				if (!background[i][j][k].EmptyP()) {
-					//     d=float(sqrt((x-(j*part_h+part_h/2))*(x-(j*part_h+part_h/2))+(y-(i*part_v+part_v/2))*(y-(i*part_v+part_v/2))));
-					//     if ((d-part_rad)<screen_rad) {
-					d = (x - (j * part_h + part_h / 2)) * (x - (j * part_h + part_h / 2)) + (y - (i * part_v + part_v / 2)) * (y - (i * part_v + part_v / 2));
-
-					if (d < tmp2) {
-						l3.Instance(background[i][j][k]);
-						l3.Rewind();
-
-						while (l3.Iterate(rpt)) {
-							rpt->draw(float(start_x), float(start_y), 0, 0, 1);
-						} 
-					} 
-				} 
-			} 
-		} 
-
+//			road_position += rp->get_length();
+	}
+	#ifdef HAVE_GLES
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_COLOR_ARRAY);
+	glVertexPointer(3, GL_FLOAT, 0, tm_vtx);
+	glColorPointer(4, GL_FLOAT, 0, tm_col);
+	glNormal3f(0.0, 0.0, 1.0);
+	glDrawElements(GL_TRIANGLES, tm_ids, GL_UNSIGNED_SHORT, tm_indices);
+	glDisableClientState(GL_COLOR_ARRAY);
+	glDisableClientState(GL_VERTEX_ARRAY);
+	#endif
+	for (k = 0;k < 9;k++) {
 		if (extras != 0) {
 			l.Instance(*extras);
 			l.Rewind();
@@ -582,27 +695,33 @@ void CTrack::draw(SDL_Rect *vp, float x, float y, float zoom, List<CPlacedGLTile
 			while (l.Iterate(pt)) {
 				if ((pt->z <= k*( -8) && pt->z > (k + 1)*( -8)) ||
 				        (pt->z <= k*( -8) && k == 8)) {
-					pt->draw(float(start_x), float(start_y), 0, 0, 1);
+//					if (pt->tile_in_bbox(0, 0, dx*8, dy*8)) {
+						pt->get_bbox(&xr, &yr, &wr, &hr);
+						d = float(sqrt((x - (xr + wr / 2)) * (x - (xr + wr / 2)) + (y - (yr + hr / 2)) * (y - (yr + hr / 2))));
+
+						if ((d - (wr + hr)) < screen_rad) {
+							pt->draw(float(start_x), float(start_y), k*-8.0f/*0*/, 0, 1);
+						}
 					//     pt->tile->draw_cmc(pt->x+start_x,pt->y+start_y,-pt->z,pt->angle,1);
 				} 
 			} 
 		} 
-	} 
+	}
+	#ifdef HAVE_GLES
+	glDisable(GL_DEPTH_TEST);
+	#undef MAX_TM
+	delete []tm_vtx;
+	delete []tm_col;
+	delete []tm_indices;
+	#endif
 
 	glPopMatrix();
-
 	delete []rt;
-
 	delete []rt2;
-
 	delete []lrt;
-
 	delete []lrt2;
-
 	delete []rrt;
-
 	delete []rrt2;
-
 } 
 
 
@@ -1170,7 +1289,7 @@ void CTrack::set_background(int type, List<GLTile> *tiles)
 
 	if (background_sfc != 0) {
 		SDL_FreeSurface(background_sfc);
-		glDeleteTextures(1, &background_tex);
+		TM_glDeleteTextures(1, &background_tex);
 	} 
 
 	switch (type) {
@@ -1376,7 +1495,6 @@ bool CTrack::over_rock(float x, float y, GLTile *rock_tile)
 
 	if (!rock_tiles_found) {
 		int i, j, k;
-
 		/* Look for rock tiles: */
 
 		for (i = 0;i < n_parts_v;i++) {
@@ -1387,16 +1505,61 @@ bool CTrack::over_rock(float x, float y, GLTile *rock_tile)
 
 					while (l.Iterate(pt)) {
 						if (pt->tile == rock_tile) {
+							/*
 							rock_tiles.Add(pt);
+							*/
+							rock_coord[numrock].x=pt->x;
+							rock_coord[numrock].y=pt->y;
+							rock_coord[numrock].dx=pt->x+pt->tile->get_dx();
+							rock_coord[numrock].dy=pt->y+pt->tile->get_dy();
+							if ((++numrock)%1024==0)
+								rock_coord=(CRockCoord*)realloc(rock_coord, sizeof(CRockCoord)*(numrock+1024));
+							int xx = (pt->x/10);
+							if (xx>rock_maxx) {
+								rock_x = (int*) realloc(rock_x, sizeof(int)*xx);
+								rock_maxx = xx;
+							}
 						} 
 					} 
 				} 
 			} 
-		} 
-
+		}
+		// buble sort the X axis...
+		if (numrock>1)
+			for (int i=0; i<numrock-1; i++)
+				for (int j=i+1; j<numrock; j++)
+					if (rock_coord[i].x > rock_coord[j].x) {
+						CRockCoord tmp;
+						tmp = rock_coord[i];
+						rock_coord[i] = rock_coord[j];
+						rock_coord[j] = tmp;
+		}
+		// create X index
+		for (int i=0; i<rock_maxx; i++)
+			rock_x[i]=0;			// not entirely true for the first smaller x, where x+dx can be missed
+		if (numrock) {
+			int i = 0;
+			int xx = rock_coord[i].x/10;
+			for (int j=0; j<rock_maxx; j++) {
+				while (j>xx) xx=rock_coord[++i].x/10;
+				rock_x[j]=i;
+			}
+		}
+				
 		rock_tiles_found = true;
 	} 
 
+	int xx = (x/10);
+	if (xx>=rock_maxx) return false;
+	xx = rock_x[xx];
+	for (int i=xx; i<numrock; i++) {
+		if (x >= rock_coord[i].x && y >= rock_coord[i].y &&
+		        x < rock_coord[i].dx && y < rock_coord[i].dy) {
+			return true;
+		}
+		if (x > rock_coord[i].dx) return false;
+	}
+/*
 	l.Instance(rock_tiles);
 
 	l.Rewind();
@@ -1407,7 +1570,7 @@ bool CTrack::over_rock(float x, float y, GLTile *rock_tile)
 			return true;
 		} 
 	} 
-
+*/
 	return false;
 } 
 

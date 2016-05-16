@@ -1,6 +1,10 @@
 #ifndef _F1_SPIRIT_ROADPIECE
 #define _F1_SPIRIT_ROADPIECE
 
+#ifdef __ARM_NEON__
+#include <arm_neon.h>
+#endif
+
 class CRoadPiece
 {
 
@@ -113,15 +117,25 @@ class CRoadPiece
 		int steps;
 		float *r_x1, *r_y1;
 		float *r_x2, *r_y2;
+		float *r_inc;
 		float *r_z;
 		float *r_cx1, *r_cy1;
 		float *r_cx2, *r_cy2;
-
+/*
+		#ifdef HAVE_GLES
+		GLfloat *vtx;
+		GLfloat *tex1;
+		GLushort *indices;
+		#endif
+*/
 		float bbox[4];
 
 		/* path: */
 		int path_points;
 		float *path_x, *path_y, *path_z, *path_a, *path_w;
+		#ifdef __ARM_NEON__
+		float32x2_t	*path_xy;
+		#endif
 
 		bool length_computed;
 		float length;

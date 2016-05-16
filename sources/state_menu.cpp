@@ -9,8 +9,13 @@
 #include "stdlib.h"
 #include "string.h"
 
+#ifdef HAVE_GLES
+#include <GLES/gl.h>
+#include <GLES/glu.h>
+#else
 #include "GL/gl.h"
 #include "GL/glu.h"
+#endif
 #include "SDL.h"
 #include "SDL_mixer.h"
 #include "SDL_image.h"
@@ -397,14 +402,28 @@ int F1SpiritApp::menu_cycle(KEYBOARDSTATE *k)
 					menu_current_menu = 28;
 					break;
 
+				case 13+210:	//Start C4A GAME
+					c4a_result = 0;
+					for (int i=0; i<N_TRACKS; i++)
+						current_player->set_points(i, 0);
+					{
+						F1S_GParameters parameters;
+						parameters.load_ascii("f1spirit2.cfg");
+						menu_multiplayer_n_enemycars = parameters.race_cars[menu_selected_track];
+						menu_multiplayer_enemy_speed = 0;
+					}
 				case 13: { /* START GAME: */
+						c4a = ((menu_option_type[browsing][menu_selected[browsing]])>210)?1:0;
 						/* Create the player(s) car(s): */
 						if (menu_selecting_player >= menu_selected_nplayers - 1) {
 							menu_fading = 3;
 							menu_fading_ctnt = 0;
 							menu_selected_car[menu_selecting_player] = menu_option_parameter[browsing][menu_selected[browsing]];
 						} else {
-							menu_current_menu = 11;
+							if ((menu_option_type[browsing][menu_selected[browsing]])>210)
+								menu_current_menu = 4+210;
+							else
+								menu_current_menu = 11;
 							menu_selected_car[menu_selecting_player] = menu_option_parameter[browsing][menu_selected[browsing]];
 						} 
 
@@ -919,13 +938,14 @@ int F1SpiritApp::menu_cycle(KEYBOARDSTATE *k)
 						menu_selected_server = menu_available_servers[server];
 						SDLNet_Write16(network_tcp_port, &(menu_selected_server->ip.port));
 
+#ifdef F1SPIRIT_DEBUG_MESSAGES
 						{
 							unsigned char *ipp;
 							ipp = (unsigned char *) & menu_selected_server->ip.host;
 							output_debug_message("Trying to connect to server %i\n", server);
 							output_debug_message("IP: %i.%i.%i.%i (port %i)\n", int(ipp[0]), int(ipp[1]), int(ipp[2]), int(ipp[3]), menu_selected_server->ip.port);
 						}
-
+#endif
 						/* Open TCP socket: */
 
 						if (menu_selected_server->tcp_socket == 0) {
@@ -1008,7 +1028,6 @@ int F1SpiritApp::menu_cycle(KEYBOARDSTATE *k)
 					}
 
 					break;
-
 			} 
 		} 
 
@@ -1687,7 +1706,12 @@ int F1SpiritApp::menu_cycle(KEYBOARDSTATE *k)
 			        menu_option_type[browsing][menu_selected[browsing]] != 31 &&
 			        menu_option_type[browsing][menu_selected[browsing]] != 32 &&
 			        menu_option_type[browsing][menu_selected[browsing]] != 34 &&
-			        k->keyboard[SDLK_SPACE] && !k->old_keyboard[SDLK_SPACE]) {
+			        ((k->keyboard[SDLK_SPACE] && !k->old_keyboard[SDLK_SPACE]) 
+#ifdef PANDORA
+						||  (k->keyboard[SDLK_PAGEDOWN] && !k->old_keyboard[SDLK_PAGEDOWN]))
+#endif
+					)
+				{
 				if (menu_option_type[browsing][menu_selected[browsing]] != 19 &&
 				        menu_option_type[browsing][menu_selected[browsing]] != 20)
 					Sound_play(S_menu_select, MIX_MAX_VOLUME);
@@ -2187,7 +2211,7 @@ int F1SpiritApp::menu_cycle(KEYBOARDSTATE *k)
 
 
 			/* Selecting PREVIOUS MADE CAR: */
-			if (menu_current_menu == 12) {
+			if ((menu_current_menu == 12) || (menu_current_menu == 222)) {
 				int car_type = menu_selected_track;
 
 				if (car_type > 5)
@@ -2829,8 +2853,8 @@ int F1SpiritApp::menu_cycle(KEYBOARDSTATE *k)
 #endif
 
 							if (result <= 0) {
-								output_debug_message("SDLNet_TCP_Recv: %s\n", SDLNet_GetError());
 #ifdef F1SPIRIT_DEBUG_MESSAGES
+								output_debug_message("SDLNet_TCP_Recv: %s\n", SDLNet_GetError());
 
 								output_debug_message("SERVER TCP: Since there has been an error, unregistering client...\n");
 #endif
@@ -3123,18 +3147,19 @@ int F1SpiritApp::menu_cycle(KEYBOARDSTATE *k)
 													} 
 												} 
 											}
-										} else {
+										} 
 #ifdef F1SPIRIT_DEBUG_MESSAGES
+										else {
 											output_debug_message("SERVER TCP: error in chat message (wrong message size)\n");
-#endif
 
 										} 
+#endif
 									}
 
 									break;
 
-								default:
 #ifdef F1SPIRIT_DEBUG_MESSAGES
+								default:
 
 									output_debug_message("SERVER TCP: received message %i, unexpected here!\n", msg_id);
 #endif
@@ -3217,8 +3242,8 @@ int F1SpiritApp::menu_cycle(KEYBOARDSTATE *k)
 
 							break;
 
-						default:
 #ifdef F1SPIRIT_DEBUG_MESSAGES
+						default:
 
 							output_debug_message("SERVER UDP: received message %i, unexpected here!\n", msg_id);
 
@@ -3455,8 +3480,8 @@ int F1SpiritApp::menu_cycle(KEYBOARDSTATE *k)
 
 										break;
 
-									default:
 #ifdef F1SPIRIT_DEBUG_MESSAGES
+									default:
 
 										output_debug_message("CLIENT TCP: received message %i, unexpected here!\n", msg_id);
 #endif
@@ -3560,8 +3585,8 @@ int F1SpiritApp::menu_cycle(KEYBOARDSTATE *k)
 
 								break;
 
-							default:
 #ifdef F1SPIRIT_DEBUG_MESSAGES
+							default:
 
 								output_debug_message("CLIENT UDP: received message %i, unexpected here!\n", msg_id);
 

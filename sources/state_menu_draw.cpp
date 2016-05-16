@@ -9,8 +9,13 @@
 #include "stdlib.h"
 #include "string.h"
 
+#ifdef HAVE_GLES
+#include <GLES/gl.h>
+#include <GLES/glu.h>
+#else
 #include "GL/gl.h"
 #include "GL/glu.h"
+#endif
 #include "SDL.h"
 #include "SDL_mixer.h"
 #include "SDL_image.h"
@@ -104,12 +109,30 @@ void F1SpiritApp::menu_draw(void)
 
 		glNormal3f(0.0, 0.0, 1.0);
 
+		#ifdef PANDORA
+		#define MINX -80
+		#define MAXX 800-80
+		#else
+		#define MINX 0
+		#define MAXX 640
+		#endif
+		#ifdef HAVE_GLES
+		GLfloat vtx[] = {MINX, 0, -4, 
+						 MINX, 480, -4, 
+						 MAXX, 480, -4,
+						 MAXX, 0, -4 };
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glVertexPointer(3, GL_FLOAT, 0, vtx);
+		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+		glDisableClientState(GL_VERTEX_ARRAY);
+		#else
 		glBegin(GL_QUADS);
 		glVertex3f(0, 0, -4);
 		glVertex3f(0, 480, -4);
 		glVertex3f(640, 480, -4);
 		glVertex3f(640, 0, -4);
 		glEnd();
+		#endif
 
 		/* Show readme.txt file: */
 		{
@@ -206,11 +229,11 @@ void F1SpiritApp::menu_draw(void)
 		sel_factor = float(0.6F - 0.4F * sin(menu_selected_timmer[0] / 10.0F));
 
 		if (menu_prev_nmenus == 2 &&
-		        (menu_current_menu != 3 || menu_selected[1] != 0)
-		        && menu_current_menu != 4) {
+		        (menu_current_menu != 3 || menu_selected[1] != 0) && (menu_current_menu != 213 || menu_selected[1] != 0)
+		        && menu_current_menu != 4  && menu_current_menu != 214 ) {
 			sfc1 = draw_menu(7, menu_title[0], menu_options[0], menu_option_type[0], menu_selected[0], sel_factor, 1, font, &(menu_first_option[0]));
 		} else {
-			if ((menu_option_type[0][menu_selected[0]] == 11 && menu_state > MENU_CONSTANT) ||
+			if (((menu_option_type[0][menu_selected[0]] == 11 || menu_option_type[0][menu_selected[0]] == 221 )&& menu_state > MENU_CONSTANT) ||
 			        (menu_state < MENU_CONSTANT && menu_options[1] != 0)) {
 				sfc1 = draw_menu(7, menu_title[0], menu_options[0], menu_option_type[0], menu_selected[0], sel_factor, 1, font, &(menu_first_option[0]));
 			} else {
@@ -424,10 +447,14 @@ void F1SpiritApp::menu_draw(void)
 					menu_trackviewing_background = new GLTile(32, 480 - (24 + 256), 256, 256);
 
 				glEnable( GL_SCISSOR_TEST );
+				#ifdef PANDORA
+				#define DELTA	80
+				#else
+				#define	DELTA 	0
+				#endif
+				glScissor(DELTA+32, 480 - (24 + 256), 256, 256);
 
-				glScissor(32, 480 - (24 + 256), 256, 256);
-
-				glViewport(32 - 42, 480 - (24 + 256), 341, 256);
+				glViewport(DELTA+32 - 42, 480 - (24 + 256), 341, 256);
 
 				menu_track_viewer->draw();
 
@@ -1255,6 +1282,7 @@ void F1SpiritApp::menu_draw(void)
 
 
 	/* Network menus: player list & chat window */
+	if (!c4a)
 	{
 		if (menu_playerlist_timmer > 0) {
 			float f = menu_playerlist_timmer / 50.0F;
@@ -1397,12 +1425,23 @@ void F1SpiritApp::menu_draw(void)
 
 		glNormal3f(0.0, 0.0, 1.0);
 
+		#ifdef HAVE_GLES
+		GLfloat vtx[] = {MINX, 0, -4, 
+						 MINX, 480, -4, 
+						 MAXX, 480, -4,
+						 MAXX, 0, -4 };
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glVertexPointer(3, GL_FLOAT, 0, vtx);
+		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+		glDisableClientState(GL_VERTEX_ARRAY);
+		#else
 		glBegin(GL_QUADS);
 		glVertex3f(0, 0, -4);
 		glVertex3f(0, 480, -4);
 		glVertex3f(640, 480, -4);
 		glVertex3f(640, 0, -4);
 		glEnd();
+		#endif
 	} 
 
 } 

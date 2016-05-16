@@ -83,10 +83,16 @@ CPlayerInfo::CPlayerInfo(void)
 
 	right[0] = SDLK_RIGHT;
 
+#ifdef PANDORA
+	accelerate[0] = SDLK_PAGEDOWN;
+
+	brake[0] = SDLK_END;
+#else
 	accelerate[0] = SDLK_SPACE;
 
 	brake[0] = SDLK_m;
-
+#endif
+	
 	joystick[0] = -1;
 
 	zoom_speed[0] = 4;
@@ -182,9 +188,15 @@ CPlayerInfo::CPlayerInfo(char *n, char *password)
 
 	right[0] = SDLK_RIGHT;
 
+#ifdef PANDORA
+	accelerate[0] = SDLK_PAGEDOWN;
+
+	brake[0] = SDLK_END;
+#else
 	accelerate[0] = SDLK_SPACE;
 
 	brake[0] = SDLK_m;
+#endif
 
 	joystick[0] = -1;
 

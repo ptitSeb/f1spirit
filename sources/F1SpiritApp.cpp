@@ -12,8 +12,14 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef HAVE_GLES
+#include <GLES/gl.h>
+#include <GLES/glu.h>
+#include "eglport.h"
+#else
 #include <GL/gl.h>
 #include <GL/glu.h>
+#endif
 #include <SDL.h>
 #include <SDL_image.h>
 #include <SDL_mixer.h>
@@ -46,6 +52,7 @@
 #include "F1SpiritApp.h"
 #include "F1Spirit-auxiliar.h"
 #include "filehandling.h"
+#include "SDL_glutaux.h"
 
 #include "debug.h"
 
@@ -72,6 +79,13 @@ F1SpiritApp::F1SpiritApp()
 {
 	int i;
 
+	
+	CRC_BuildTable();
+	Init_TexManager();
+	#ifdef HAVE_GLES
+	glesSpecial(false);
+	#endif
+
 	load_configuration("f1spirit.cfg");
 
 #ifdef F1SPIRIT_DEBUG_MESSAGES
@@ -85,13 +99,13 @@ F1SpiritApp::F1SpiritApp()
 	font = load_bmp_font("graphics/font-unicode-alpha.png", 0, 256);
 #ifdef F1SPIRIT_DEBUG_MESSAGES
 
-	output_debug_message("font loaded: %p\n", font);
+	output_debug_message("font loaded: %p (firsts points=%x %x %x %x)\n", font, ((int*)font->pixels)[0],((int*)font->pixels)[1],((int*)font->pixels)[2],((int*)font->pixels)[3]);
 #endif
 
 	small_font = load_bmp_font("graphics/smallfont-unicode-alpha.png", 0, 256);
 #ifdef F1SPIRIT_DEBUG_MESSAGES
 
-	output_debug_message("small font loaded: %p\n", font);
+	output_debug_message("small font loaded: %p\n", small_font);
 #endif
 
 	friendly_player = new CPlayerInfo();
@@ -327,7 +341,6 @@ F1SpiritApp::F1SpiritApp()
 	output_debug_message("F1-Spirit initialization finished\n");
 
 #endif
-
 }
 
 F1SpiritApp::~F1SpiritApp()
@@ -659,7 +672,9 @@ void F1SpiritApp::draw()
 
 	glDisable( GL_DEPTH_TEST );
 
+	#ifndef HAVE_GLES
 	glPolygonMode(GL_FRONT, GL_FILL);
+	#endif
 
 	glClearColor(0, 0, 0, 0.0);
 
@@ -762,7 +777,11 @@ void F1SpiritApp::draw()
 	
 	glDisable(GL_BLEND);
 
+	#ifdef HAVE_GLES
+	EGL_SwapBuffers();
+	#else
 	SDL_GL_SwapBuffers();
+	#endif
 }
 
 void F1SpiritApp::blank_hiscores(void)

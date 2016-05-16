@@ -2,8 +2,13 @@
 #include "windows.h"
 #endif
 
+#ifdef HAVE_GLES
+#include <GLES/gl.h>
+#include <GLES/glu.h>
+#else
 #include "GL/gl.h"
 #include "GL/glu.h"
+#endif
 #include "SDL.h"
 #include "SDL_image.h"
 
@@ -56,6 +61,20 @@ void CPlacedGLTile::draw(float dx, float dy, float dz, float pangle, float pzoom
 	} 
 } 
 
+void CPlacedGLTile::get_bbox(float *bbx, float *bby, float *bbw, float *bbh)
+{	
+	if (tile) {
+		*bbx = x-tile->get_hot_x();
+		*bby = y-tile->get_hot_y();
+		*bbw = tile->get_dx();
+		*bbh = tile->get_dy();
+	} else {
+		*bbx = 0;
+		*bby = 0;
+		*bbw = 0;
+		*bbh = 0;
+	} 
+} 
 
 
 

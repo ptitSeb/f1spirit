@@ -8,8 +8,13 @@
 #include "stdlib.h"
 #include "string.h"
 
+#ifdef HAVE_GLES
+#include <GLES/gl.h>
+#include <GLES/glu.h>
+#else
 #include "GL/gl.h"
 #include "GL/glu.h"
+#endif
 #include "SDL.h"
 #include "SDL_image.h"
 #include "SDL_mixer.h"

@@ -14,6 +14,12 @@ class CTyreMark
 		float qx[4], qy[4];
 };
 
+struct CRockCoord
+{
+	float x, y;
+	float dx, dy;
+};
+
 
 /* The CTRack class only contains the background of the track (including people), but */
 /* does not contain the cars */
@@ -112,8 +118,13 @@ class CTrack
 		List<CRotatedGLTile> water_tiles; /* used to accelerate the collision detection with water */
 
 		bool rock_tiles_found;
-		List<CRotatedGLTile> rock_tiles; /* used to accelerate the collision detection with rocks */
-
+		CRockCoord *rock_coord;
+		int	numrock;
+		int *rock_x;
+		int rock_maxx;
+		//List<CRotatedGLTile> rock_tiles; /* used to accelerate the collision detection with rocks */
+		
+		
 		float pit_x[2], pit_y[2];
 		float pit_angle;
 

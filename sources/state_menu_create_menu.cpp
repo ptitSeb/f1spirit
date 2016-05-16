@@ -9,8 +9,13 @@
 #include "stdlib.h"
 #include "string.h"
 
+#ifdef HAVE_GLES
+#include <GLES/gl.h>
+#include <GLES/glu.h>
+#else
 #include "GL/gl.h"
 #include "GL/glu.h"
+#endif
 #include "SDL.h"
 #include "SDL_mixer.h"
 #include "SDL_image.h"
@@ -79,34 +84,40 @@ void F1SpiritApp::menu_create_menu(void)
 				if (nplayers > 0) {
 					menu_title[0] = new char[strlen("CHOOSE AN OPTION") + 1];
 					strcpy(menu_title[0], "CHOOSE AN OPTION");
-					menu_options[0] = new char[strlen("CONTINUE GAME\nNEW GAME\nPRACTICE MODE\nTITLE SCREEN\n") + 1];
-					strcpy(menu_options[0], "CONTINUE GAME\nNEW GAME\nPRACTICE MODE\nTITLE SCREEN\n");
+					menu_options[0] = new char[strlen("CONTINUE GAME\nNEW GAME\nPRACTICE MODE\nC4A GAME\nTITLE SCREEN\n") + 1];
+					strcpy(menu_options[0], "CONTINUE GAME\nNEW GAME\nPRACTICE MODE\nC4A GAME\nTITLE SCREEN\n");
+					menu_noptions[0] = 5;
+					menu_option_type[0][0] = 1;
+					menu_option_type[0][1] = 1;
+					menu_option_type[0][2] = 1;
+					menu_option_type[0][3] = 1;
+					menu_option_type[0][4] = 0;
+					menu_option_parameter[0][0] = 2;
+					menu_option_parameter[0][1] = 1;
+					menu_option_parameter[0][2] = 4;
+					menu_option_parameter[0][3] = 214; //C4A
+					menu_first_option[0] = 0;
+				} else {
+					menu_title[0] = new char[strlen("CHOOSE AN OPTION") + 1];
+					strcpy(menu_title[0], "CHOOSE AN OPTION");
+					menu_options[0] = new char[strlen("NEW GAME\nPRACTICE MODE\nC4A GAME\nTITLE SCREEN\n") + 1];
+					strcpy(menu_options[0], "NEW GAME\nPRACTICE MODE\nC4A GAME\nTITLE SCREEN\n");
 					menu_noptions[0] = 4;
 					menu_option_type[0][0] = 1;
 					menu_option_type[0][1] = 1;
 					menu_option_type[0][2] = 1;
 					menu_option_type[0][3] = 0;
-					menu_option_parameter[0][0] = 2;
-					menu_option_parameter[0][1] = 1;
-					menu_option_parameter[0][2] = 4;
-					menu_first_option[0] = 0;
-				} else {
-					menu_title[0] = new char[strlen("CHOOSE AN OPTION") + 1];
-					strcpy(menu_title[0], "CHOOSE AN OPTION");
-					menu_options[0] = new char[strlen("NEW GAME\nPRACTICE MODE\nTITLE SCREEN\n") + 1];
-					strcpy(menu_options[0], "NEW GAME\nPRACTICE MODE\nTITLE SCREEN\n");
-					menu_noptions[0] = 3;
-					menu_option_type[0][0] = 1;
-					menu_option_type[0][1] = 1;
-					menu_option_type[0][2] = 0;
 					menu_option_parameter[0][0] = 1;
 					menu_option_parameter[0][1] = 4;
+					menu_option_parameter[0][2] = 214;
 					menu_first_option[0] = 0;
 				} 
 			}
+			c4a = 0;
 
 			break;
 
+		case 211:
 		case 1:
 			menu_title[0] = new char[strlen("ENTER YOUR NAME") + 1];
 			strcpy(menu_title[0], "ENTER YOUR NAME");
@@ -116,12 +127,13 @@ void F1SpiritApp::menu_create_menu(void)
 			menu_noptions[0] = 2;
 			menu_option_type[0][0] = 2;
 			menu_option_type[0][1] = 1;
-			menu_option_parameter[0][0] = 37;
+			menu_option_parameter[0][0] = 37+(menu_current_menu-1);
 			menu_option_parameter[0][1] = 0;
 			menu_first_option[0] = 0;
 			menu_editing_valid = false;
 			break;
 
+		case 247:
 		case 37: {
 				char tmp[80];
 
@@ -134,7 +146,7 @@ void F1SpiritApp::menu_create_menu(void)
 				menu_noptions[0] = 2;
 				menu_option_type[0][0] = 24;
 				menu_option_type[0][1] = 1;
-				menu_option_parameter[0][0] = 4;
+				menu_option_parameter[0][0] = 4+(menu_current_menu-37);
 				menu_option_parameter[0][1] = 0;
 				menu_first_option[0] = 0;
 				menu_editing_valid = false;
@@ -237,35 +249,25 @@ void F1SpiritApp::menu_create_menu(void)
 				} 
 
 				menu_option_type[0][nplayers] = 1;
-
 				menu_option_parameter[0][nplayers] = 0;
-
 				menu_title[1] = 0;
-
 				menu_options[1] = new char[strlen("CONTINUE GAME\nDELETE GAME\nBACK\n") + 1];
-
 				strcpy(menu_options[1], "CONTINUE GAME\nDELETE GAME\nBACK\n");
-
 				menu_noptions[1] = 3;
-
 				menu_option_type[1][0] = 3;
-
 				menu_option_type[1][1] = 4;
-
 				menu_option_type[1][2] = 1;
-
 				menu_option_parameter[1][0] = 4;
-
 				menu_option_parameter[1][1] = 2;
-
 				menu_option_parameter[1][2] = 2;
-
 				menu_first_option[1] = 0;
 			}
 
 			break;
 
+		case 214:
 		case 4:
+			c4a = (menu_current_menu>210)?1:0;
 
 			if (current_player == 0) {
 				FILE *fp;
@@ -289,95 +291,88 @@ void F1SpiritApp::menu_create_menu(void)
 
 			} 
 
-			menu_title[0] = new char[strlen(current_player->get_name()) + 1];
+			if (menu_current_menu==4) {
+				menu_title[0] = new char[strlen(current_player->get_name()) + 1];
+				strcpy(menu_title[0], current_player->get_name());
+				menu_options[0] = new char[strlen("PLAY\nCONFIGURE\nHELP\nHIGH SCORES\nREPLAYS\nWEB\nTITLE SCREEN\n") + 1];
+				strcpy(menu_options[0], "PLAY\nCONFIGURE\nHELP\nHIGH SCORES\nREPLAYS\nWEB\nTITLE SCREEN\n");
+				menu_noptions[0] = 7;
+				menu_option_type[0][0] = 1;
+				menu_option_type[0][1] = 1;
+				menu_option_type[0][2] = 1;
+				menu_option_type[0][3] = 9;
+				menu_option_type[0][4] = 9;
+				menu_option_type[0][5] = 1;
+				menu_option_type[0][6] = 0;
+				menu_option_parameter[0][0] = 25;
+				menu_option_parameter[0][1] = 5;
+				menu_option_parameter[0][2] = 23;
+				menu_option_parameter[0][3] = 0;
+				menu_option_parameter[0][4] = 1;
+				menu_option_parameter[0][5] = 29;
+				menu_first_option[0] = 0;
+			} else {
+				menu_title[0] = new char[strlen(current_player->get_name()) + 1];
+				strcpy(menu_title[0], current_player->get_name());
+				menu_options[0] = new char[strlen("PLAY\nCONFIGURE\nTITLE SCREEN\n") + 1];
+				strcpy(menu_options[0], "PLAY\nCONFIGURE\nTITLE SCREEN\n");
+				menu_noptions[0] = 3;
+				menu_option_type[0][0] = 1;
+				menu_option_type[0][1] = 1;
+				menu_option_type[0][2] = 0;
+				menu_option_parameter[0][0] = 12+210;	// 1 Player...
+				menu_option_parameter[0][1] = 5+210;
+				menu_first_option[0] = 0;
+				menu_selected_track = 0;	// start from the beggining
 
-			strcpy(menu_title[0], current_player->get_name());
-
-			menu_options[0] = new char[strlen("PLAY\nCONFIGURE\nHELP\nHIGH SCORES\nREPLAYS\nWEB\nTITLE SCREEN\n") + 1];
-
-			strcpy(menu_options[0], "PLAY\nCONFIGURE\nHELP\nHIGH SCORES\nREPLAYS\nWEB\nTITLE SCREEN\n");
-
-			menu_noptions[0] = 7;
-
-			menu_option_type[0][0] = 1;
-
-			menu_option_type[0][1] = 1;
-
-			menu_option_type[0][2] = 1;
-
-			menu_option_type[0][3] = 9;
-
-			menu_option_type[0][4] = 9;
-
-			menu_option_type[0][5] = 1;
-
-			menu_option_type[0][6] = 0;
-
-			menu_option_parameter[0][0] = 25;
-
-			menu_option_parameter[0][1] = 5;
-
-			menu_option_parameter[0][2] = 23;
-
-			menu_option_parameter[0][3] = 0;
-
-			menu_option_parameter[0][4] = 1;
-
-			menu_option_parameter[0][5] = 29;
-
-			menu_first_option[0] = 0;
-
+			}
 			break;
 
 		case 25:
 			menu_title[0] = new char[strlen("GAME MODE") + 1];
-
 			strcpy(menu_title[0], "GAME MODE");
-
 			menu_options[0] = new char[strlen("1 PLAYER\nMULTIPLAYER\nNETWORK\nBACK\n") + 1];
-
 			strcpy(menu_options[0], "1 PLAYER\nMULTIPLAYER\nNETWORK\nBACK\n");
-
 			menu_noptions[0] = 4;
-
 			menu_option_type[0][0] = 1;
-
 			menu_option_type[0][1] = 1;
-
 			if (network)
 				menu_option_type[0][2] = 1;
 			else
 				menu_option_type[0][2] = -1;
-
 			menu_option_type[0][3] = 1;
-
 			menu_option_parameter[0][0] = 9;
-
 			menu_option_parameter[0][1] = 21;
-
 			menu_option_parameter[0][2] = 30;
-
 			menu_option_parameter[0][3] = 4;
-
 			menu_first_option[0] = 0;
-
 			break;
 
+		case 5+210:
 		case 5:
 
+		case 6+210:
 		case 6:
 
+		case 7+210:
 		case 7:
 
+		case 8+210:
 		case 8:
 
+		case 19+210:
 		case 19:
 
+		case 20+210:
 		case 20:
 
+		case 22+210:
 		case 22:
 
-		case 24: {
+		case 24+210: 
+		case 24:
+			c4a = (menu_current_menu>210)?1:0;
+			{
 				int i, l, pos;
 				char *volumes[5] = {"NONE", "LOW ", "MED ", "HIGH", "MAX "};
 
@@ -412,18 +407,18 @@ void F1SpiritApp::menu_create_menu(void)
 
 				for (i = 0;i < current_player->get_nplayers();i++) {
 					menu_option_type[0][i + 2] = 11;
-					menu_option_parameter[0][i + 2] = 22;
+					menu_option_parameter[0][i + 2] = 22+c4a*210;
 				} 
 
 				menu_option_type[0][current_player->get_nplayers() + 2] = 1;
 
-				menu_option_parameter[0][current_player->get_nplayers() + 2] = 4;
+				menu_option_parameter[0][current_player->get_nplayers() + 2] = 4+c4a*210;
 
-				if (menu_current_menu == 5)
+				if ((menu_current_menu == 5) || (menu_current_menu == 5+210))
 					menu_first_option[0] = 0;
 			}
 
-			if (menu_current_menu == 22) {
+			if ((menu_current_menu == 22) || (menu_current_menu == 22+210)) {
 				menu_title[1] = 0;
 				menu_options[1] = new char[strlen("KEYBOARD CFG\nJOYSTICK/KEYS\nBACK\n") + 1];
 				strcpy(menu_options[1], "KEYBOARD CFG\nJOYSTICK/KEYS\nBACK\n");
@@ -431,13 +426,13 @@ void F1SpiritApp::menu_create_menu(void)
 				menu_option_type[1][0] = 1;
 				menu_option_type[1][1] = 1;
 				menu_option_type[1][2] = 1;
-				menu_option_parameter[1][0] = 7;
-				menu_option_parameter[1][1] = 8;
-				menu_option_parameter[1][2] = 5;
+				menu_option_parameter[1][0] = 7+c4a*210;
+				menu_option_parameter[1][1] = 8+c4a*210;
+				menu_option_parameter[1][2] = 5+c4a*210;
 				menu_first_option[1] = 0;
 			} 
 
-			if (menu_current_menu == 7) {
+			if ((menu_current_menu == 7) || (menu_current_menu == 7+210)) {
 				char tmp[256];
 				menu_title[1] = 0;
 				sprintf(tmp, "GEAR UP: %s\nGEAR DOWN: %s\nLEFT: %s\nRIGHT: %s\nACCEL: %s\nBRAKE: %s\nBACK\n",
@@ -458,13 +453,13 @@ void F1SpiritApp::menu_create_menu(void)
 				menu_option_type[1][4] = 7;
 				menu_option_type[1][5] = 7;
 				menu_option_type[1][6] = 1;
-				menu_option_parameter[1][0] = 7;
-				menu_option_parameter[1][1] = 7;
-				menu_option_parameter[1][2] = 7;
-				menu_option_parameter[1][3] = 7;
-				menu_option_parameter[1][4] = 7;
-				menu_option_parameter[1][5] = 7;
-				menu_option_parameter[1][6] = 6;
+				menu_option_parameter[1][0] = 7+c4a*210;
+				menu_option_parameter[1][1] = 7+c4a*210;
+				menu_option_parameter[1][2] = 7+c4a*210;
+				menu_option_parameter[1][3] = 7+c4a*210;
+				menu_option_parameter[1][4] = 7+c4a*210;
+				menu_option_parameter[1][5] = 7+c4a*210;
+				menu_option_parameter[1][6] = 6+c4a*210;
 				menu_first_option[1] = 0;
 
 				if (current_player->get_joystick(menu_selected[0]) != -1) {
@@ -482,7 +477,7 @@ void F1SpiritApp::menu_create_menu(void)
 				} 
 			} 
 
-			if (menu_current_menu == 8) {
+			if ((menu_current_menu == 8) || (menu_current_menu == 8+210)) {
 				int nj = SDL_NumJoysticks();
 				int i, pos;
 
@@ -497,21 +492,15 @@ void F1SpiritApp::menu_create_menu(void)
 				} 
 
 				sprintf(menu_options[1] + pos, "BACK\n");
-
 				menu_noptions[1] = nj + 2;
-
 				for (i = 0;i < nj + 1;i++) {
 					menu_option_type[1][i] = 8;
-					menu_option_parameter[1][i] = 6;
+					menu_option_parameter[1][i] = 6+c4a*210;
 				} 
-
 				menu_option_type[1][nj + 1] = 1;
-
-				menu_option_parameter[1][nj + 1] = 6;
-
+				menu_option_parameter[1][nj + 1] = 6+c4a*210;
 				menu_first_option[1] = 0;
 			} 
-
 			break;
 
 		case 9:
@@ -816,7 +805,10 @@ void F1SpiritApp::menu_create_menu(void)
 
 			break;
 
-		case 12: {
+		case 222:	// C4A
+		case 12: 
+			c4a = (menu_current_menu>210)?1:0;
+			{
 				char tmp[80];
 				sprintf(tmp, "CAR SELECTION PLAYER %i", menu_selecting_player + 1);
 				menu_title[0] = new char[strlen(tmp) + 1];
@@ -859,25 +851,15 @@ void F1SpiritApp::menu_create_menu(void)
 			} 
 
 			menu_noptions[0] = 4;
-
-			menu_option_type[0][0] = 13;
-
-			menu_option_type[0][1] = 13;
-
-			menu_option_type[0][2] = 13;
-
+			menu_option_type[0][0] = 13+c4a*210;
+			menu_option_type[0][1] = 13+c4a*210;
+			menu_option_type[0][2] = 13+c4a*210;
 			menu_option_type[0][3] = 1;
-
 			menu_option_parameter[0][0] = 0;
-
 			menu_option_parameter[0][1] = 1;
-
 			menu_option_parameter[0][2] = 2;
-
-			menu_option_parameter[0][3] = 11;
-
+			menu_option_parameter[0][3] = (c4a)? 4+210:11;
 			menu_first_option[0] = 0;
-
 			break;
 
 		case 13:
@@ -986,35 +968,20 @@ void F1SpiritApp::menu_create_menu(void)
 				} 
 
 				menu_noptions[1] = 7;
-
 				menu_option_type[1][0] = 12;
-
 				menu_option_type[1][1] = 12;
-
 				menu_option_type[1][2] = 12;
-
 				menu_option_type[1][3] = 12;
-
 				menu_option_type[1][4] = 12;
-
 				menu_option_type[1][5] = 12;
-
 				menu_option_type[1][6] = 1;
-
 				menu_option_parameter[1][0] = 1;
-
 				menu_option_parameter[1][1] = 1;
-
 				menu_option_parameter[1][2] = 1;
-
 				menu_option_parameter[1][3] = 1;
-
 				menu_option_parameter[1][4] = 1;
-
 				menu_option_parameter[1][5] = 1;
-
 				menu_option_parameter[1][6] = 28;
-
 				menu_first_option[1] = 0;
 			} 
 
@@ -1067,78 +1034,45 @@ void F1SpiritApp::menu_create_menu(void)
 
 		case 21:
 			menu_title[0] = new char[strlen("Nº OF PLAYERS") + 1];
-
 			strcpy(menu_title[0], "MULTIPLAYER");
-
 			menu_options[0] = new char[strlen("2 PLAYERS\n3 PLAYERS\n4 PLAYERS\nBACK\n") + 1];
-
 			strcpy(menu_options[0], "2 PLAYERS\n3 PLAYERS\n4 PLAYERS\nBACK\n");
-
 			menu_noptions[0] = 4;
-
 			menu_option_type[0][0] = 18;
-
 			menu_option_type[0][1] = 18;
-
 			menu_option_type[0][2] = 18;
-
 			menu_option_type[0][3] = 1;
-
 			menu_option_parameter[0][0] = 9;
-
 			menu_option_parameter[0][1] = 9;
-
 			menu_option_parameter[0][2] = 9;
-
 			menu_option_parameter[0][3] = 4;
-
 			menu_first_option[0] = 0;
-
 			break;
 
 		case 23:
 			menu_title[0] = 0;
-
 			menu_options[0] = new char[strlen("BACK\n") + 1];
-
 			strcpy(menu_options[0], "BACK\n");
-
 			menu_noptions[0] = 1;
-
 			menu_option_type[0][0] = 1;
-
 			menu_option_parameter[0][0] = 4;
-
 			menu_first_option[0] = 0;
-
 			break;
 
 		case 26:
 			/* SAVE CAR DESIGN: */
 			menu_title[0] = new char[strlen("ENTER DESIGN NAME") + 1];
-
 			strcpy(menu_title[0], "ENTER DESIGN NAME");
-
 			menu_options[0] = new char[strlen("_\nBACK\n") + 1];
-
 			strcpy(menu_options[0], "_\nBACK\n");
-
 			menu_editing[0] = 0;
-
 			menu_noptions[0] = 2;
-
 			menu_option_type[0][0] = 22;
-
 			menu_option_type[0][1] = 1;
-
 			menu_option_parameter[0][0] = 13;
-
 			menu_option_parameter[0][1] = 13;
-
 			menu_first_option[0] = 0;
-
 			menu_editing_valid = false;
-
 			break;
 
 		case 27:

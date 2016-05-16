@@ -7,8 +7,13 @@
 #include "stdlib.h"
 #include "string.h"
 
+#ifdef HAVE_GLES
+#include <GLES/gl.h>
+#include <GLES/glu.h>
+#else
 #include "GL/gl.h"
 #include "GL/glu.h"
+#endif
 #include "SDL.h"
 
 #include "List.h"
@@ -25,9 +30,34 @@
 #include "debug_memorymanager.h"
 #endif
 
+#ifdef __ARM_NEON__
+#include <arm_neon.h>
+#endif
+
 #define OPTIMIZE_DX  64
 #define OPTIMIZE_DY  64
 
+#ifdef HAVE_GLES
+#define glPushMatrix 	glesPushMatrix
+#define glPopMatrix 	glesPopMatrix
+#define glScalef		glesScalef
+#define glRotatef		glesRotatef
+#define glTranslatef	glesTranslatef
+
+#define glBegin			glesBegin
+#define glTexCoord2f	glesTexCoord2f
+#define glNormal3f		glesNormal3f
+#define	glVertex3f		glesVertex3f
+#define glColor4f		glesColor4f
+#define glEnd			glesEnd
+#define glBindTexture	glesBindTexture
+
+#define GL_QUADS 		0
+
+extern bool special;
+#else
+#define special false
+#endif
 
 CRoadPiece::CRoadPiece(void)
 {
@@ -56,6 +86,14 @@ CRoadPiece::CRoadPiece(void)
 	path_z = 0;
 	path_a = 0;
 	path_w = 0;
+	#ifdef __ARM_NEON__
+	path_xy= 0;
+	#endif
+/*	#ifdef HAVE_GLES
+	indices=0;
+	vtx=0;
+	tex1=0;
+	#endif*/
 
 	r_x1 = r_y1 = 0;
 	r_x2 = r_y2 = 0;
@@ -98,9 +136,18 @@ CRoadPiece::CRoadPiece(float x, float y, float z)
 	path_z = 0;
 	path_a = 0;
 	path_w = 0;
+	#ifdef __ARM_NEON__
+	path_xy= 0;
+	#endif
+/*	#ifdef HAVE_GLES
+	indices=0;
+	vtx=0;
+	tex1=0;
+	#endif*/
 
 	r_x1 = r_y1 = 0;
 	r_x2 = r_y2 = 0;
+	r_inc = 0;
 	r_z = 0;
 	r_cx1 = r_cy1 = 0;
 	r_cx2 = r_cy2 = 0;
@@ -131,25 +178,25 @@ CRoadPiece::CRoadPiece(FILE *fp)
 	// y2*=6;
 
 	path_points = 0;
-
 	path_x = 0;
-
 	path_y = 0;
-
 	path_z = 0;
-
 	path_a = 0;
-
 	path_w = 0;
+	#ifdef __ARM_NEON__
+	path_xy= 0;
+	#endif
+/*	#ifdef HAVE_GLES
+	indices=0;
+	vtx=0;
+	tex1=0;
+	#endif*/
 
 	r_x1 = r_y1 = 0;
-
 	r_x2 = r_y2 = 0;
-
+	r_inc = 0;
 	r_z = 0;
-
 	r_cx1 = r_cy1 = 0;
-
 	r_cx2 = r_cy2 = 0;
 
 	length_computed = false;
@@ -163,6 +210,7 @@ CRoadPiece::~CRoadPiece()
 	delete []r_y1;
 	delete []r_x2;
 	delete []r_y2;
+	delete []r_inc;
 	delete []r_z;
 	delete []r_cx1;
 	delete []r_cy1;
@@ -174,6 +222,22 @@ CRoadPiece::~CRoadPiece()
 	delete []path_z;
 	delete []path_a;
 	delete []path_w;
+	#ifdef __ARM_NEON__
+	if (path_xy)
+		delete []path_xy;
+	path_xy= 0;
+	#endif
+/*	#ifdef HAVE_GLES
+	if (indices)
+		delete []indices;
+	indices=0;
+	if (vtx)
+		delete []vtx;
+	vtx=0;
+	if (tex1)
+		delete []tex1;
+	tex1=0;
+	#endif*/
 	path_points = 0;
 	path_x = 0;
 	path_y = 0;
@@ -217,6 +281,7 @@ void CRoadPiece::force_internal_draw(void)
 	delete []r_y1;
 	delete []r_x2;
 	delete []r_y2;
+	delete []r_inc;
 	delete []r_z;
 	delete []r_cx1;
 	delete []r_cy1;
@@ -228,6 +293,16 @@ void CRoadPiece::force_internal_draw(void)
 	delete []path_z;
 	delete []path_a;
 	delete []path_w;
+	#ifdef __ARM_NEON__
+	if (path_xy)
+		delete []path_xy;
+	#endif
+/*	#ifdef HAVE_GLES
+	if (indices) delete[] indices;
+	if (vtx) delete[] vtx;
+	if (tex1) delete[] tex1;
+	#endif*/
+	
 	r_x1 = r_y1 = 0;
 	r_x2 = r_y2 = 0;
 	r_z = 0;
@@ -245,8 +320,10 @@ void CRoadPiece::draw(void)
 	if (r_x1 != 0) {
 		int i;
 
-		glEnable(GL_COLOR_MATERIAL);
-		glDisable(GL_TEXTURE_2D);
+		if (!special) {
+			glEnable(GL_COLOR_MATERIAL);
+			glDisable(GL_TEXTURE_2D);
+		}
 
 		glColor4f(0.5, 0.5, 0.5, 1.0);
 		glBegin(GL_QUADS);
@@ -303,16 +380,21 @@ void CRoadPiece::draw(float offs, int n_textures, GLuint *textures, int n_ltextu
 
 	if (r_x1 != 0) {
 		int i, j, lj, rj;
+		int old_tex;
 		float pos = offs;
 		float inc;
-		float p1x, p1y, p2x, p2y;
+		//float p1x, p1y, p2x, p2y;
 		float l = get_length(), tmp;
 		float n_lines, n_lines_inc;
 		float n_lines_tmp1, n_lines_tmp2;
 		float r_width, r_width_inc;
 
-		glEnable(GL_COLOR_MATERIAL);
-		glEnable(GL_TEXTURE_2D);
+		if (!special) {
+			#ifndef HAVE_GLES
+			glEnable(GL_COLOR_MATERIAL);
+			#endif
+			glEnable(GL_TEXTURE_2D);
+		}
 
 		glColor4f(1, 1, 1, 1.0);
 		n_lines = float(nlines2);
@@ -320,43 +402,57 @@ void CRoadPiece::draw(float offs, int n_textures, GLuint *textures, int n_ltextu
 		r_width = w1;
 		r_width_inc = (w2 - w1) / steps;
 
-		for (i = 0;i < steps;i++, n_lines += n_lines_inc, r_width += r_width_inc) {
+		if (textures != 0) {
+			for (i = 0;i < steps;i++, n_lines += n_lines_inc, r_width += r_width_inc) {
 
-			tmp = l - (pos - offs);
-			j = int(tmp / 128.0F);
+				tmp = l - (pos - offs);
+				j = int(tmp / 128.0F);
 
-			if (j < 0)
-				j = 0;
+				if (j < 0)
+					j = 0;
 
-			if (j >= n_textures)
-				j = n_textures - 1;
+				if (j >= n_textures)
+					j = n_textures - 1;
 
-			{
-				p1x = (r_x1[i] + r_x2[i]) / 2;
-				p1y = (r_y1[i] + r_y2[i]) / 2;
-				p2x = (r_x1[i + 1] + r_x2[i + 1]) / 2;
-				p2y = (r_y1[i + 1] + r_y2[i + 1]) / 2;
-				inc = float(sqrt((p1x - p2x) * (p1x - p2x) + (p1y - p2y) * (p1y - p2y)));
-			}
+				inc = r_inc[i];
 
-			if (textures != 0) {
 				glBindTexture(GL_TEXTURE_2D, textures[j]);
 				glBegin(GL_QUADS);
-				glTexCoord2f(0, -pos / 128.0F);
+				int p = pos;
+				p=p%128;
+				glTexCoord2f(0, -p* (1.0f / 128.0F));
 				glVertex3f(r_x1[i], r_y1[i], r_z[i]);
 
-				glTexCoord2f(0.75, -pos / 128.0F);
+				glTexCoord2f(0.75, -p* (1.0f / 128.0F));
 				glVertex3f(r_x2[i], r_y2[i], r_z[i]);
 
-				glTexCoord2f(0.75, -(pos + inc) / 128.0F);
+				glTexCoord2f(0.75, -(p + inc)*(1.0f / 128.0F));
 				glVertex3f(r_x2[i + 1], r_y2[i + 1], r_z[i + 1]);
 
-				glTexCoord2f(0, -(pos + inc) / 128.0F);
+				glTexCoord2f(0, -(p + inc)* (1.0f/ 128.0F));
 				glVertex3f(r_x1[i + 1], r_y1[i + 1], r_z[i + 1]);
 				glEnd();
+				pos += inc;
 			} 
+		}
+		pos = offs;
+		n_lines = float(nlines2);
+		r_width = w1;
+		if ((r_cx1 != 0) && (ltextures != 0)) {
+			for (i = 0;i < steps;i++, n_lines += n_lines_inc, r_width += r_width_inc) {
 
-			if (r_cx1 != 0) {
+				tmp = l - (pos - offs);
+
+	/*			{
+					p1x = (r_x1[i] + r_x2[i]) / 2;
+					p1y = (r_y1[i] + r_y2[i]) / 2;
+					p2x = (r_x1[i + 1] + r_x2[i + 1]) / 2;
+					p2y = (r_y1[i + 1] + r_y2[i + 1]) / 2;
+					inc = float(sqrt((p1x - p2x) * (p1x - p2x) + (p1y - p2y) * (p1y - p2y)));
+				}*/
+				inc = r_inc[i];
+
+
 				lj = int(tmp / 128.0F);
 
 				if (lj < 0)
@@ -365,26 +461,44 @@ void CRoadPiece::draw(float offs, int n_textures, GLuint *textures, int n_ltextu
 				if (lj >= n_ltextures)
 					lj = n_ltextures - 1;
 
-				if (ltextures != 0) {
-					glBindTexture(GL_TEXTURE_2D, ltextures[lj]);
+				glBindTexture(GL_TEXTURE_2D, ltextures[lj]);
+				glBegin(GL_QUADS);
+				int p = pos;
+				p=p%128;
+				glTexCoord2f(0, -p / 128.0F);
+				glVertex3f(r_cx1[i], r_cy1[i], r_z[i]);
 
-					glBegin(GL_QUADS);
-					glTexCoord2f(0, -pos / 128.0F);
-					glVertex3f(r_cx1[i], r_cy1[i], r_z[i]);
+				glTexCoord2f(1, -p / 128.0F);
+				glVertex3f(r_x1[i], r_y1[i], r_z[i]);
 
-					glTexCoord2f(1, -pos / 128.0F);
-					glVertex3f(r_x1[i], r_y1[i], r_z[i]);
+				glTexCoord2f(1, -(p + inc) / 128.0F);
+				glVertex3f(r_x1[i + 1], r_y1[i + 1], r_z[i + 1]);
 
-					glTexCoord2f(1, -(pos + inc) / 128.0F);
-					glVertex3f(r_x1[i + 1], r_y1[i + 1], r_z[i + 1]);
-
-					glTexCoord2f(0, -(pos + inc) / 128.0F);
-					glVertex3f(r_cx1[i + 1], r_cy1[i + 1], r_z[i + 1]);
-					glEnd();
-				} 
+				glTexCoord2f(0, -(p + inc) / 128.0F);
+				glVertex3f(r_cx1[i + 1], r_cy1[i + 1], r_z[i + 1]);
+				glEnd();
+			 
+				pos += inc;
 			} 
+		}
+		old_tex=-1;
+		pos = offs;
+		n_lines = float(nlines2);
+		r_width = w1;
+		if ((r_cx2 != 0) && (rtextures != 0)) {
+			for (i = 0;i < steps;i++, n_lines += n_lines_inc, r_width += r_width_inc) {
 
-			if (r_cx2 != 0) {
+				tmp = l - (pos - offs);
+
+	/*			{
+					p1x = (r_x1[i] + r_x2[i]) / 2;
+					p1y = (r_y1[i] + r_y2[i]) / 2;
+					p2x = (r_x1[i + 1] + r_x2[i + 1]) / 2;
+					p2y = (r_y1[i + 1] + r_y2[i + 1]) / 2;
+					inc = float(sqrt((p1x - p2x) * (p1x - p2x) + (p1y - p2y) * (p1y - p2y)));
+				}*/
+				inc = r_inc[i];
+
 				rj = int(tmp / 128.0F);
 
 				if (rj < 0)
@@ -393,27 +507,40 @@ void CRoadPiece::draw(float offs, int n_textures, GLuint *textures, int n_ltextu
 				if (rj >= n_rtextures)
 					rj = n_rtextures - 1;
 
-				if (rtextures != 0) {
-					glBindTexture(GL_TEXTURE_2D, rtextures[rj]);
+				glBindTexture(GL_TEXTURE_2D, rtextures[rj]);
+				glBegin(GL_QUADS);
+				int p = pos;
+				p=p%128;
+				glTexCoord2f(0, -p / 128.0F);
+				glVertex3f(r_cx2[i], r_cy2[i], r_z[i]);
 
-					glBegin(GL_QUADS);
-					glTexCoord2f(0, -pos / 128.0F);
-					glVertex3f(r_cx2[i], r_cy2[i], r_z[i]);
+				glTexCoord2f(1, -p / 128.0F);
+				glVertex3f(r_x2[i], r_y2[i], r_z[i]);
 
-					glTexCoord2f(1, -pos / 128.0F);
-					glVertex3f(r_x2[i], r_y2[i], r_z[i]);
+				glTexCoord2f(1, -(p + inc) / 128.0F);
+				glVertex3f(r_x2[i + 1], r_y2[i + 1], r_z[i + 1]);
 
-					glTexCoord2f(1, -(pos + inc) / 128.0F);
-					glVertex3f(r_x2[i + 1], r_y2[i + 1], r_z[i + 1]);
-
-					glTexCoord2f(0, -(pos + inc) / 128.0F);
-					glVertex3f(r_cx2[i + 1], r_cy2[i + 1], r_z[i + 1]);
-					glEnd();
-				} 
+				glTexCoord2f(0, -(p + inc) / 128.0F);
+				glVertex3f(r_cx2[i + 1], r_cy2[i + 1], r_z[i + 1]);
+				glEnd();
+				pos += inc;
 			} 
+		}
+		old_tex=-1;
+		pos = offs;
+		n_lines = float(nlines2);
+		r_width = w1;
+		#ifdef HAVE_GLES
+		glBindTexture(GL_TEXTURE_2D, line_texture);
+		glBegin(GL_QUADS);
+		#endif
+		if (n_lines > 0) {
+			for (i = 0;i < steps;i++, n_lines += n_lines_inc, r_width += r_width_inc) {
 
+				tmp = l - (pos - offs);
+				
+				inc = r_inc[i];
 
-			if (n_lines > 0) {
 				/* Road lines: */
 				n_lines_tmp1 = n_lines;
 				n_lines_tmp2 = n_lines + n_lines_inc;
@@ -425,27 +552,18 @@ void CRoadPiece::draw(float offs, int n_textures, GLuint *textures, int n_ltextu
 					n_lines_tmp2 = 1;
 
 				int line;
-
 				float line_start1, line_inc1, line_width1;
-
 				float line_start2, line_inc2, line_width2;
-
 				float lx1, lx2, ly1, ly2;
-
 				float next_lx1, next_lx2, next_ly1, next_ly2;
 
 				line_start1 = 1.0F / (n_lines_tmp1 + 1);
-
 				line_inc1 = 1.0F / (n_lines_tmp1 + 1);
-
 				line_width1 = (1.0F / r_width) * 2;
-
 				line_start2 = 1.0F / (n_lines_tmp2 + 1);
-
 				line_inc2 = 1.0F / (n_lines_tmp2 + 1);
-
 				line_width2 = (1.0F / (r_width + r_width_inc)) * 2;
-
+				
 				for (line = 0;float(line) < max(n_lines_tmp1, n_lines_tmp2);line++) {
 					if ((line_start1 - line_width1 > 0 && line_start1 + line_width1 < 1.0F) ||
 					        (line_start2 - line_width2 > 0 && line_start2 + line_width2 < 1.0F)) {
@@ -458,8 +576,10 @@ void CRoadPiece::draw(float offs, int n_textures, GLuint *textures, int n_ltextu
 						next_lx2 = r_x1[i + 1] * (line_start2 + line_width2) + r_x2[i + 1] * (1.0F - (line_start2 + line_width2));
 						next_ly2 = r_y1[i + 1] * (line_start2 + line_width2) + r_y2[i + 1] * (1.0F - (line_start2 + line_width2));
 
+						#ifndef HAVE_GLES
 						glBindTexture(GL_TEXTURE_2D, line_texture);
 						glBegin(GL_QUADS);
+						#endif
 						glTexCoord2f(0, -pos / 128.0F);
 						glVertex3f(lx1, ly1, r_z[i]);
 
@@ -471,24 +591,23 @@ void CRoadPiece::draw(float offs, int n_textures, GLuint *textures, int n_ltextu
 
 						glTexCoord2f(0, -(pos + inc) / 128.0F);
 						glVertex3f(next_lx1, next_ly1, r_z[i + 1]);
+						#ifndef HAVE_GLES
 						glEnd();
-
+						#endif
 					} 
-
 					line_start1 += line_inc1;
-
 					line_start2 += line_inc2;
 				} 
-
-
+				pos += inc;
 			} 
-
-
-			pos += inc;
 		} 
+		#ifdef HAVE_GLES
+		glEnd();
+		#endif
 
 
-		glDisable(GL_TEXTURE_2D);
+		if (!special) 
+			glDisable(GL_TEXTURE_2D);
 
 	} 
 } 
@@ -527,6 +646,11 @@ void CRoadPiece::draw_linear(void)
 	path_z = new float[2];
 	path_a = new float[2];
 	path_w = new float[2];
+	#ifdef __ARM_NEON__
+	path_xy= new float32x2_t[2];
+	path_xy[0] = vset_lane_f32(x1, vdup_n_f32(y1), 0);
+	path_xy[1] = vset_lane_f32(x2, vdup_n_f32(y2), 0);
+	#endif
 	path_x[0] = float(x1);
 	path_x[1] = float(x2);
 	path_y[0] = float(y1);
@@ -562,7 +686,11 @@ void CRoadPiece::draw_linear(void)
 	float t_rchicane = rchicane1;
 	float dist = float(sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1)));
 
+	#ifdef PANDORA0
+	steps = int((dist / 64) + 1);
+	#else
 	steps = int((dist / 16) + 1);
+	#endif
 
 	float t_a_inc = (a2 - a1) / float(steps);
 	float t_w_inc = (w2 - w1) / float(steps);
@@ -577,6 +705,14 @@ void CRoadPiece::draw_linear(void)
 	r_x2 = new float[steps + 1];
 	r_y2 = new float[steps + 1];
 	r_z = new float[steps + 1];
+	r_inc = new float[steps + 1];
+/*
+	#ifdef HAVE_GLES
+	indices= new GLushort[(steps+1)*6*2];
+	vtx=new GLfloat[(steps+1)*4*3*2];
+	tex1=new GLfloat[(steps+1)*4*2*2];;
+	#endif
+*/	
 
 	if (lchicane1 > 0 || lchicane2 > 0 || rchicane1 > 0 || rchicane2 > 0) {
 		r_cx1 = new float[steps + 1];
@@ -595,6 +731,14 @@ void CRoadPiece::draw_linear(void)
 
 		r_x2[i] = t_x - t_rx;
 		r_y2[i] = t_y - t_ry;
+
+		if (i>0) {
+			float p1x = (r_x1[i-1] + r_x2[i-1]) / 2;
+			float p1y = (r_y1[i-1] + r_y2[i-1]) / 2;
+			float p2x = (r_x1[i] + r_x2[i]) / 2;
+			float p2y = (r_y1[i] + r_y2[i]) / 2;
+			r_inc[i-1] = float(sqrt((p1x - p2x) * (p1x - p2x) + (p1y - p2y) * (p1y - p2y)));
+		}
 
 		r_z[i] = t_z;
 
@@ -677,17 +821,11 @@ void CRoadPiece::draw_linear(void)
 		} 
 
 		t_x += t_vx;
-
 		t_y += t_vy;
-
 		t_z += t_vz;
-
 		t_a += t_a_inc;
-
 		t_w += t_w_inc;
-
 		t_lchicane += t_lchicane_inc;
-
 		t_rchicane += t_rchicane_inc;
 	} // for
 } 
@@ -706,19 +844,18 @@ void CRoadPiece::draw_circular_adapted(void)
 
 	/* compute the size of the road piece: */
 	float t_x = float(x1), t_y = float(y1), t_z = float(z1);
-
 	float t_rx, t_ry;
-
 	float t_a = float(a1), t_w = float(w1);
-
 	float dist = float(sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1)));
 
+	#ifdef PANDORA0
+	steps = int((dist / 64) + 1);
+	#else
 	steps = int((dist / 16) + 1);
+	#endif
 
 	float t_w_inc = (w2 - w1) / float(steps);
-
 	float t_z_inc = (z2 - z1) / float(steps);
-
 	float v1[3] = {0, 0, 0}, v2[3] = {0, 0, 0};
 
 	v1[0] = float(cos(a1 * M_PI / 180));
@@ -765,11 +902,8 @@ void CRoadPiece::draw_circular_adapted(void)
 
 	/* calcular el ángulo inicial, el ángulo final y la dirección: */
 	float ta1 = atan2f(y1 - center[1], x1 - center[0]);
-
 	float ta2 = atan2f(y2 - center[1], x2 - center[0]);
-
 	float t_a_inc;
-
 	float radius = float(sqrt((x1 - center[0]) * (x1 - center[0]) + (y1 - center[1]) * (y1 - center[1])));
 
 	if (radius > 10*dist) {
@@ -778,7 +912,6 @@ void CRoadPiece::draw_circular_adapted(void)
 	} 
 
 	float d1 = ta2 - ta1;
-
 	float d2 = ta1 - ta2;
 
 	while (d1 < 0)
@@ -794,13 +927,9 @@ void CRoadPiece::draw_circular_adapted(void)
 		d2 -= float(M_PI * 2);
 
 	bool first = true;
-
 	float t_lchicane = 0, t_lchicane_inc = 0;
-
 	float t_rchicane = 0, t_rchicane_inc = 0;
-
 	float t_crx, t_cry;
-
 	float t_pa, t_pa_inc; /* path angle */
 
 	if (d1 < d2) {
@@ -819,19 +948,12 @@ void CRoadPiece::draw_circular_adapted(void)
 		} 
 
 		t_lchicane = lchicane1;
-
 		t_rchicane = rchicane1;
-
 		t_w = float(w1);
-
 		t_z = float(z1);
-
 		t_w_inc = (w2 - w1) / float(steps);
-
 		t_z_inc = (z2 - z1) / float(steps);
-
 		t_lchicane_inc = (lchicane2 - lchicane1) / float(steps);
-
 		t_rchicane_inc = (rchicane2 - rchicane1) / float(steps);
 	} else {
 		t_a = ta2;
@@ -849,32 +971,27 @@ void CRoadPiece::draw_circular_adapted(void)
 		} 
 
 		t_lchicane = lchicane2;
-
 		t_rchicane = rchicane2;
-
 		t_w = float(w2);
-
 		t_z = float(z2);
-
 		t_w_inc = (w1 - w2) / float(steps);
-
 		t_z_inc = (z1 - z2) / float(steps);
-
 		t_lchicane_inc = (lchicane1 - lchicane2) / float(steps);
-
 		t_rchicane_inc = (rchicane1 - rchicane2) / float(steps);
 	} 
 
 	r_x1 = new float[steps + 1];
-
 	r_y1 = new float[steps + 1];
-
 	r_x2 = new float[steps + 1];
-
 	r_y2 = new float[steps + 1];
-
 	r_z = new float[steps + 1];
-
+	r_inc = new float[steps + 1];
+/*	#ifdef HAVE_GLES
+	indices= new GLushort[(steps+1)*6*2];
+	vtx=new GLfloat[(steps+1)*4*3*2];
+	tex1=new GLfloat[(steps+1)*4*2*2];;
+	#endif
+*/
 	if (lchicane2 > 0 || lchicane1 > 0 || rchicane2 > 0 || rchicane1 > 0) {
 		r_cx1 = new float[steps + 1];
 		r_cy1 = new float[steps + 1];
@@ -884,23 +1001,21 @@ void CRoadPiece::draw_circular_adapted(void)
 
 	/* Compute the path: */
 	path_points = steps + 1;
-
 	path_x = new float[steps + 1];
-
 	path_y = new float[steps + 1];
-
 	path_z = new float[steps + 1];
-
 	path_a = new float[steps + 1];
-
 	path_w = new float[steps + 1];
+	#ifdef __ARM_NEON__
+	path_xy= new float32x2_t[steps + 1];
+	#endif
 
 	for (i = 0;i <= steps;i++, t_a += t_a_inc, t_w += t_w_inc, t_z += t_z_inc, t_lchicane += t_lchicane_inc, t_rchicane += t_rchicane_inc, t_pa += t_pa_inc) {
 		t_x = float(center[0] + radius * cos(t_a));
 		t_y = float(center[1] + radius * sin(t_a));
 
-		t_rx = float(t_w * cos((t_pa * M_PI) / 180.0F + M_PI / 2) / 2);
-		t_ry = float(t_w * sin((t_pa * M_PI) / 180.0F + M_PI / 2) / 2);
+		t_rx = float(t_w * cos((t_pa + 90) * M_PI / 180) / 2);
+		t_ry = float(t_w * sin((t_pa + 90) * M_PI / 180) / 2);
 
 
 		r_x1[i] = t_x + t_rx;
@@ -911,6 +1026,14 @@ void CRoadPiece::draw_circular_adapted(void)
 
 		r_z[i] = t_z;
 
+		if (i>0) {
+			float p1x = (r_x1[i-1] + r_x2[i-1]) / 2;
+			float p1y = (r_y1[i-1] + r_y2[i-1]) / 2;
+			float p2x = (r_x1[i] + r_x2[i]) / 2;
+			float p2y = (r_y1[i] + r_y2[i]) / 2;
+			r_inc[i-1] = float(sqrt((p1x - p2x) * (p1x - p2x) + (p1y - p2y) * (p1y - p2y)));
+		}
+
 		if (first) {
 			bbox[0] = min(r_x1[i], r_x2[i]);
 			bbox[1] = min(r_y1[i], r_y2[i]);
@@ -918,6 +1041,7 @@ void CRoadPiece::draw_circular_adapted(void)
 			bbox[3] = max(r_y1[i], r_y2[i]);
 			first = false;
 		} else {
+			// end...
 			if (r_x1[i] < bbox[0])
 				bbox[0] = r_x1[i];
 
@@ -991,15 +1115,14 @@ void CRoadPiece::draw_circular_adapted(void)
 		} 
 
 		path_x[i] = t_x;
-
 		path_y[i] = t_y;
-
 		path_z[i] = t_z;
-
 		path_a[i] = t_pa;
-
 		//  path_w[i]=t_w+(t_lchicane+t_rchicane)/2;
 		path_w[i] = t_w;
+		#ifdef __ARM_NEON__
+		path_xy[i]=vset_lane_f32(t_x, vdup_n_f32(t_y), 0);
+		#endif
 	} // for
 
 } 
@@ -1049,8 +1172,24 @@ bool CRoadPiece::get_path_position(float x, float y, float *px, float *py, float
 	float d, min_d = -1;
 	bool f1 = false, f2 = false;
 	float l1, l2;
+	#ifdef __ARM_NEON__
+	float32x2_t xy = {x, y};
+	float32x2_t d2;
+	float32x2_t min_d2 = vdup_n_f32(100000);
+	uint32x2_t  res;
+	#endif
 
 	for (i = 0;i < path_points;i++) {
+		#ifdef __ARM_NEON__
+		d2=vsub_f32(xy, path_xy[i]);
+		d2=vmul_f32(d2, d2);
+		d2=vpadd_f32(d2,d2);
+		res=vclt_f32(d2, min_d2);
+		if (vget_lane_u32(res, 0)) {
+			closest = i;
+			min_d2 = d2;
+		}
+		#else
 		d = (x - path_x[i]) * (x - path_x[i]) + (y - path_y[i]) * (y - path_y[i]);
 
 		if (min_d == -1 ||
@@ -1058,6 +1197,7 @@ bool CRoadPiece::get_path_position(float x, float y, float *px, float *py, float
 			closest = i;
 			min_d = d;
 		} 
+		#endif
 	} 
 
 	/* test the position in the interval: closest -> closest+1 */
@@ -1195,8 +1335,24 @@ bool CRoadPiece::distance_to_road(float x, float y, float *distance)
 	bool f1 = false, f2 = false;
 	float l1, l2;
 	float px, py, pw;
+	#ifdef __ARM_NEON__
+	float32x2_t xy = {x, y};
+	float32x2_t d2;
+	float32x2_t min_d2 = vdup_n_f32(100000);
+	uint32x2_t  res;
+	#endif
 
 	for (i = 0;i < path_points;i++) {
+		#ifdef __ARM_NEON__
+		d2=vsub_f32(xy, path_xy[i]);
+		d2=vmul_f32(d2, d2);
+		d2=vpadd_f32(d2,d2);
+		res=vclt_f32(d2, min_d2);
+		if (vget_lane_u32(res, 0)) {
+			closest = i;
+			min_d2 = d2;
+		}
+		#else
 		d = (x - path_x[i]) * (x - path_x[i]) + (y - path_y[i]) * (y - path_y[i]);
 
 		if (min_d == -1 ||
@@ -1204,6 +1360,7 @@ bool CRoadPiece::distance_to_road(float x, float y, float *distance)
 			closest = i;
 			min_d = d;
 		} 
+		#endif
 	} 
 
 	/* test the position in the interval: closest -> closest+1 */
@@ -1353,8 +1510,24 @@ bool CRoadPiece::offset_from_road_center(float x, float y, float *offset, float 
 	bool f1 = false, f2 = false;
 	float l1, l2;
 	float px, py, pa;
+	#ifdef __ARM_NEON__
+	float32x2_t xy = {x, y};
+	float32x2_t d2;
+	float32x2_t min_d2 = vdup_n_f32(100000);
+	uint32x2_t  res;
+	#endif
 
 	for (i = 0;i < path_points;i++) {
+		#ifdef __ARM_NEON__
+		d2=vsub_f32(xy, path_xy[i]);
+		d2=vmul_f32(d2, d2);
+		d2=vpadd_f32(d2,d2);
+		res=vclt_f32(d2, min_d2);
+		if (vget_lane_u32(res, 0)) {
+			closest = i;
+			min_d2 = d2;
+		}
+		#else
 		d = (x - path_x[i]) * (x - path_x[i]) + (y - path_y[i]) * (y - path_y[i]);
 
 		if (min_d == -1 ||
@@ -1362,6 +1535,7 @@ bool CRoadPiece::offset_from_road_center(float x, float y, float *offset, float 
 			closest = i;
 			min_d = d;
 		} 
+		#endif
 	} 
 
 	/* test the position in the interval: closest -> closest+1 */

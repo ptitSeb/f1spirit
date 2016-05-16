@@ -9,8 +9,13 @@
 #include "stdlib.h"
 #include "string.h"
 
+#ifdef HAVE_GLES
+#include <GLES/gl.h>
+#include <GLES/glu.h>
+#else
 #include "GL/gl.h"
 #include "GL/glu.h"
+#endif
 #include "SDL.h"
 #include "SDL_mixer.h"
 #include "SDL_image.h"
@@ -293,48 +298,65 @@ int F1SpiritApp::gameoptions_cycle(KEYBOARDSTATE *k)
 					char *volumes[5] = {"NONE", "LOW ", "MED.", "HIGH", "MAX."};
 
 					l = strlen("PLAYER 000\n") * current_player->get_nplayers() + strlen("CONTINUE\nQUIT\nRESTART\n\nMUSIC VOL: MAX.\nSFX VOL: MAX.\nPLAYER 1\nPLAYER 2\nPLAYER 3\nPLAYER 4\n") + 1;
+					if (c4a)
+						l = strlen("CONTINUE\nQUIT\n\nMUSIC VOL: MAX.\nSFX VOL: MAX.\nPLAYER 1\n")+1;
 					menu_options[0] = new char[l];
 					pos = 0;
 					{
 						int v1 = 0, v2 = 0;
 						v1 = current_player->get_music_volume() / 32;
 						v2 = current_player->get_sfx_volume() / 32;
-						sprintf(menu_options[0], "CONTINUE\nQUIT\nRESTART\n\nMUSIC VOL: %s\nSFX VOL: %s\n", volumes[v1], volumes[v2]);
+						if (c4a)
+							sprintf(menu_options[0], "CONTINUE\nQUIT\n\nMUSIC VOL: %s\nSFX VOL: %s\n", volumes[v1], volumes[v2]);
+						else
+							sprintf(menu_options[0], "CONTINUE\nQUIT\nRESTART\n\nMUSIC VOL: %s\nSFX VOL: %s\n", volumes[v1], volumes[v2]);
 					}
 
 					pos = strlen(menu_options[0]);
 
-					for (i = 0;i < current_player->get_nplayers();i++) {
-						sprintf(menu_options[0] + pos, "PLAYER %i\n", i + 1);
-						pos = strlen(menu_options[0]);
-					} 
+					if(c4a) {
+						for (i = 0;i < 1;i++) {
+							sprintf(menu_options[0] + pos, "PLAYER %i\n", i + 1);
+							pos = strlen(menu_options[0]);
+						} 
+					} else {
+						for (i = 0;i < current_player->get_nplayers();i++) {
+							sprintf(menu_options[0] + pos, "PLAYER %i\n", i + 1);
+							pos = strlen(menu_options[0]);
+						} 
+					}
 
 					menu_title[0] = new char[strlen("PAUSE") + 1];
 
 					strcpy(menu_title[0], "PAUSE");
 
-					menu_noptions[0] = current_player->get_nplayers() + 7;
+					if (c4a)
+						menu_noptions[0] = 5+1;
+					else
+						menu_noptions[0] = current_player->get_nplayers() + 7;
 
 					menu_option_type[0][0] = 13;
-
 					menu_option_type[0][1] = 0;
 
-					menu_option_type[0][2] = 24;
+					if (c4a) {
+						menu_option_type[0][2] = -1;
+						menu_option_type[0][3] = 15;
+						menu_option_type[0][4] = 16;
+						menu_option_type[0][5] = 11;
+						menu_option_parameter[0][5] = 22;
+					} else {
+						menu_option_type[0][2] = 24;
+						menu_option_type[0][3] = -1;
+						menu_option_type[0][4] = 15;
+						menu_option_type[0][5] = 16;
+						menu_option_type[0][6] = 11;
+						menu_option_parameter[0][6] = 22;
 
-					menu_option_type[0][3] = -1;
-
-					menu_option_type[0][4] = 15;
-
-					menu_option_type[0][5] = 16;
-
-					menu_option_type[0][6] = 11;
-
-					menu_option_parameter[0][6] = 22;
-
-					for (i = 0;i < current_player->get_nplayers();i++) {
-						menu_option_type[0][i + 7] = 11;
-						menu_option_parameter[0][i + 7] = 22;
-					} 
+						for (i = 0;i < current_player->get_nplayers();i++) {
+							menu_option_type[0][i + 7] = 11;
+							menu_option_parameter[0][i + 7] = 22;
+						} 
+					}
 
 					menu_first_option[0] = 0;
 				}
@@ -639,7 +661,12 @@ int F1SpiritApp::gameoptions_cycle(KEYBOARDSTATE *k)
 			} 
 
 			if (menu_option_type[browsing][menu_selected[browsing]] != 2 &&
-			        k->keyboard[SDLK_SPACE] && !k->old_keyboard[SDLK_SPACE]) {
+			        ((k->keyboard[SDLK_SPACE] && !k->old_keyboard[SDLK_SPACE]) 
+#ifdef PANDORA
+					||  (k->keyboard[SDLK_PAGEDOWN] && !k->old_keyboard[SDLK_PAGEDOWN]))
+#endif
+				)
+				{
 				if (menu_option_type[browsing][menu_selected[browsing]] != 19 &&
 				        menu_option_type[browsing][menu_selected[browsing]] != 20)
 					Sound_play(S_menu_select, 128);
@@ -816,6 +843,25 @@ void F1SpiritApp::gameoptions_draw(void)
 
 		glNormal3f(0.0, 0.0, 1.0);
 
+		#ifdef PANDORA
+		#define MINX -80
+		#define MAXX 800-80
+		#else
+		#define MINX 0
+		#define MAXX 640
+		#endif
+		#ifdef HAVE_GLES
+		{
+			GLfloat vtx[] = {MINX, 0, -4, 
+							 MINX, 480, -4, 
+							 MAXX, 480, -4,
+							 MAXX, 0, -4 };
+			glEnableClientState(GL_VERTEX_ARRAY);
+			glVertexPointer(3, GL_FLOAT, 0, vtx);
+			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+			glDisableClientState(GL_VERTEX_ARRAY);
+		}
+		#else
 		glBegin(GL_QUADS);
 
 		glVertex3f(0, 0, -4);
@@ -827,6 +873,7 @@ void F1SpiritApp::gameoptions_draw(void)
 		glVertex3f(640, 0, -4);
 
 		glEnd();
+		#endif
 	}
 
 

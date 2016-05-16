@@ -46,7 +46,7 @@ class F1SpiritGame
 		friend class CCar;
 
 	public:
-		F1SpiritGame(CPlayerInfo *player, int ntrack, int nplayers, int ncars, int enemy_speed, int *selected_car, int **selected_part, SDL_Surface *f, KEYBOARDSTATE *k);
+		F1SpiritGame(CPlayerInfo *player, int ntrack, int nplayers, int ncars, int enemy_speed, int *selected_car, int **selected_part, SDL_Surface *f, KEYBOARDSTATE *k, int c4a);
 		F1SpiritGame(CReplayInfo *ri, SDL_Surface *f, KEYBOARDSTATE *k);
 		~F1SpiritGame();
 

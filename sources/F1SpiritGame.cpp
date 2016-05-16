@@ -11,8 +11,13 @@
 #include "string.h"
 #include <time.h>
 
+#ifdef HAVE_GLES
+#include <GLES/gl.h>
+#include <GLES/glu.h>
+#else
 #include "GL/gl.h"
 #include "GL/glu.h"
+#endif
 #include "SDL.h"
 #include "SDL_image.h"
 #include "SDL_mixer.h"
@@ -79,6 +84,11 @@ int race_laps[N_TRACKS] = {4, 3, 4, 3, 3,
                            6, 6, 6, 6
                           };
 
+int race_lapsc4a[N_TRACKS] = {1, 1, 2, 1, 1,
+                           2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                           3, 3, 3, 3
+                          };
+
 
 void F1SpiritGame::initialize_track(int ntrack)
 {
@@ -116,281 +126,186 @@ void F1SpiritGame::initialize_track(int ntrack)
 	} 
 
 	race_minimap_car_sfc = IMG_Load("graphics/minimap-car.png");
-
 	race_minimap_enemycar_sfc = IMG_Load("graphics/minimap-enemycar.png");
 
 #ifdef F1SPIRIT_DEBUG_MESSAGES
-
 	output_debug_message("graphics/cars-[car-type].png: %p\n", race_car_sfc);
-
 	output_debug_message("graphics/minimap-car.png: %p\n", race_minimap_car_sfc);
-
 	output_debug_message("graphics/minimap-enemycar.png: %p\n", race_minimap_enemycar_sfc);
-
 #endif
 
 	race_minitrack = 0;
-
 	/* 107 x 183 */
 	race_semaphore[0] = new GLTile("graphics/semaphore.png", 0, 0, 107, 183);
-
 	race_semaphore[1] = new GLTile("graphics/semaphore.png", 107, 0, 107, 183);
-
 	race_semaphore[2] = new GLTile("graphics/semaphore.png", 214, 0, 107, 183);
-
 	race_semaphore[3] = new GLTile("graphics/semaphore.png", 321, 0, 107, 183);
-
 	race_semaphore[4] = new GLTile("graphics/semaphore.png", 428, 0, 107, 183);
 
 #ifdef F1SPIRIT_DEBUG_MESSAGES
-
 	output_debug_message("graphics/semaphore: %p,%p,%p,%p\n", race_semaphore[0], race_semaphore[1], race_semaphore[2], race_semaphore[3]);
-
 #endif
 
 	race_lap_tile[0] = new GLTile("graphics/laps.png", 0, 0, 32, 36);
-
 	race_lap_tile[1] = new GLTile("graphics/laps.png", 32, 0, 32, 36);
-
 	race_lap_tile[2] = new GLTile("graphics/laps.png", 64, 0, 32, 36);
-
 	race_lap_tile[3] = new GLTile("graphics/laps.png", 96, 0, 32, 36);
-
 	race_lap_tile[4] = new GLTile("graphics/laps.png", 128, 0, 32, 36);
 
 #ifdef F1SPIRIT_DEBUG_MESSAGES
-
 	output_debug_message("graphics/laps: %p,%p,%p,%p\n", race_lap_tile[0], race_lap_tile[1], race_lap_tile[2], race_lap_tile[3], race_lap_tile[4]);
-
 #endif
 
 	for (i = 0;i < 9;i++) {
 		race_rpm_tile[i] = new GLTile("graphics/rpm.png", 0, 48 * i, 160, 48);
 #ifdef F1SPIRIT_DEBUG_MESSAGES
-
 		output_debug_message("graphics/rpm %i: %p\n", i, race_rpm_tile[i]);
 #endif
-
 	} 
 
 	race_extra_tiles[0] = new GLTile("graphics/extras.png", 0, 0, 8, 8);
-
 	race_extra_tiles[0]->set_hotspot(4, 4);
-
 	race_extra_tiles[1] = new GLTile("graphics/extras.png", 8, 0, 8, 8);
-
 	race_extra_tiles[1]->set_hotspot(4, 4);
-
 	race_extra_tiles[2] = new GLTile("graphics/extras.png", 16, 0, 8, 8);
-
 	race_extra_tiles[2]->set_hotspot(4, 4);
-
 	race_extra_tiles[3] = new GLTile("graphics/extras.png", 24, 0, 8, 8);
-
 	race_extra_tiles[3]->set_hotspot(4, 4);
 
 #ifdef F1SPIRIT_DEBUG_MESSAGES
-
 	output_debug_message("graphics/extras: %p,%p,%p,%p\n", race_extra_tiles[0], race_extra_tiles[1], race_extra_tiles[2], race_lap_tile[3], race_lap_tile[3]);
-
 #endif
 
 	road_tile[0] = 0;
-
 	road_tile[1] = 0;
-
 	road_tile[2] = 0;
-
 	road_ltile[0] = 0;
-
 	road_ltile[1] = 0;
-
 	road_rtile[0] = 0;
-
 	road_rtile[1] = 0;
-
 	road_lines = 0;
-
 	race_damage = new GLTile("graphics/damage.png");
 
 #ifdef F1SPIRIT_DEBUG_MESSAGES
-
 	output_debug_message("graphics/damage.png: %p\n", race_damage);
-
 #endif
 
 	race_fuel = new GLTile("graphics/hud/fuel.png");
-
+	
 #ifdef F1SPIRIT_DEBUG_MESSAGES
-
 	output_debug_message("graphics/hud/fuel.png: %p\n", race_fuel);
-
 #endif
 
 	race_cloud[0] = new GLTile("graphics/cloud1.png");
-
 	race_cloud[1] = new GLTile("graphics/cloud2.png");
-
 	race_cloud[2] = new GLTile("graphics/cloud3.png");
-
+	
 #ifdef F1SPIRIT_DEBUG_MESSAGES
-
 	output_debug_message("graphics/cloud1.png: %p\n", race_cloud[0]);
-
 	output_debug_message("graphics/cloud2.png: %p\n", race_cloud[1]);
-
 	output_debug_message("graphics/cloud3.png: %p\n", race_cloud[2]);
-
 #endif
 
 	race_sfx_folder = 0;
-
 	race_default_sfx_folder = 0;
-
 
 	/* New scoreboard graphics: */
 	hud_fixed_1 = new GLTile("graphics/hud/hud_fixed_1.png");
 
 #ifdef F1SPIRIT_DEBUG_MESSAGES
-
 	output_debug_message("graphics/hud/hud_fixed_1.png: %p\n", hud_fixed_1);
-
 #endif
 
 	hud_fixed_2 = new GLTile("graphics/hud/hud_fixed_2.png");
-
+	
 #ifdef F1SPIRIT_DEBUG_MESSAGES
-
 	output_debug_message("graphics/hud/hud_fixed_2.png: %p\n", hud_fixed_2);
-
 #endif
 
 	hud_fixed_3 = new GLTile("graphics/hud/hud_fixed_3.png");
 
 #ifdef F1SPIRIT_DEBUG_MESSAGES
-
 	output_debug_message("graphics/hud/hud_fixed_3.png: %p\n", hud_fixed_3);
-
 #endif
 
 	hud_fixed_3_sidefuel = new GLTile("graphics/hud/hud_fixed_3_sidefuel.png");
 
 #ifdef F1SPIRIT_DEBUG_MESSAGES
-
 	output_debug_message("graphics/hud/hud_fixed_3_sidefuel.png: %p\n", hud_fixed_3_sidefuel);
-
 #endif
 
 	hud_fixed_4 = new GLTile("graphics/hud/hud_fixed_4.png");
 
 #ifdef F1SPIRIT_DEBUG_MESSAGES
-
 	output_debug_message("graphics/hud/hud_fixed_4.png: %p\n", hud_fixed_4);
-
 #endif
 
 	hud_damage = new GLTile("graphics/hud/hud_damage.png");
 
 #ifdef F1SPIRIT_DEBUG_MESSAGES
-
 	output_debug_message("graphics/hud/hud_damage.png: %p\n", hud_damage);
-
 #endif
 
 	hud_rpm[0] = new GLTile("graphics/hud/hud_rpm_1.png");
-
 	hud_rpm[1] = new GLTile("graphics/hud/hud_rpm_2.png");
-
 	hud_rpm[2] = new GLTile("graphics/hud/hud_rpm_3.png");
-
 	hud_rpm[3] = new GLTile("graphics/hud/hud_rpm_4.png");
-
 	hud_rpm[4] = new GLTile("graphics/hud/hud_rpm_5.png");
-
 	hud_rpm[5] = new GLTile("graphics/hud/hud_rpm_6.png");
-
 	hud_rpm[6] = new GLTile("graphics/hud/hud_rpm_7.png");
-
 	hud_rpm[7] = new GLTile("graphics/hud/hud_rpm_8.png");
-
 	hud_rpm[8] = new GLTile("graphics/hud/hud_rpm_9.png");
-
 	hud_rpm[9] = new GLTile("graphics/hud/hud_rpm_10.png");
-
 	hud_rpm[10] = new GLTile("graphics/hud/hud_rpm_11.png");
 
 #ifdef F1SPIRIT_DEBUG_MESSAGES
-
 	output_debug_message("graphics/hud/hud_rpm_1.png: %p\n", hud_rpm[0]);
-
 	output_debug_message("graphics/hud/hud_rpm_2.png: %p\n", hud_rpm[1]);
-
 	output_debug_message("graphics/hud/hud_rpm_3.png: %p\n", hud_rpm[2]);
-
 	output_debug_message("graphics/hud/hud_rpm_4.png: %p\n", hud_rpm[3]);
-
 	output_debug_message("graphics/hud/hud_rpm_5.png: %p\n", hud_rpm[4]);
-
 	output_debug_message("graphics/hud/hud_rpm_6.png: %p\n", hud_rpm[5]);
-
 	output_debug_message("graphics/hud/hud_rpm_7.png: %p\n", hud_rpm[6]);
-
 	output_debug_message("graphics/hud/hud_rpm_8.png: %p\n", hud_rpm[7]);
-
 	output_debug_message("graphics/hud/hud_rpm_9.png: %p\n", hud_rpm[8]);
-
 	output_debug_message("graphics/hud/hud_rpm_10.png: %p\n", hud_rpm[9]);
-
 	output_debug_message("graphics/hud/hud_rpm_11.png: %p\n", hud_rpm[10]);
-
 #endif
 
 	for (i = 0;i < 6;i++) {
 		hud_gear[i] = new GLTile("graphics/hud/hud_gears.png", 0, 16 * i, 18, 16);
 #ifdef F1SPIRIT_DEBUG_MESSAGES
-
 		output_debug_message("graphics/hud/hud_gears.png %i: %p\n", i, hud_gear[i]);
 #endif
-
 	} 
 
 	for (i = 0;i < 10;i++) {
 		hud_speed_font[i] = new GLTile("graphics/hud/hud_speed_font.png", 0, 40 * i, 32, 40);
 #ifdef F1SPIRIT_DEBUG_MESSAGES
-
 		output_debug_message("graphics/hud/hud_speed_font.png %i: %p\n", i, hud_speed_font[i]);
 #endif
-
 	} 
 
 	for (i = 0;i < 12;i++) {
 		hud_time_font[i] = new GLTile("graphics/hud/hud_time_font.png", 0, 24 * i, 20, 24);
 #ifdef F1SPIRIT_DEBUG_MESSAGES
-
 		output_debug_message("graphics/hud/hud_time_font.png %i: %p\n", i, hud_time_font[i]);
 #endif
-
 	} 
 
 	minihud_fuel = new GLTile("graphics/hud/minihud_fuel.png");
 
 #ifdef F1SPIRIT_DEBUG_MESSAGES
-
 	output_debug_message("graphics/hud/minihud_fuel.png: %p\n", minihud_fuel);
-
 #endif
-
 	/* Load signs: */
 	for (i = 0;i < 10;i++) {
 		signs[i] = new GLTile("graphics/signs.png", 64 * i, 0, 64, 64);
 		signs[i]->set_hotspot(32, 32);
 #ifdef F1SPIRIT_DEBUG_MESSAGES
-
 		output_debug_message("graphics/signs.png %i: %p\n", i, signs[i]);
 #endif
-
 	} 
-
 
 	/* Create the track: */
 	switch (ntrack) {
@@ -400,26 +315,22 @@ void F1SpiritGame::initialize_track(int ntrack)
 			road_tile[1] = new GLTile("graphics/stock/road2.png");
 			road_tile[2] = new GLTile("graphics/stock/road3.png");
 #ifdef F1SPIRIT_DEBUG_MESSAGES
-
 			output_debug_message("graphics/stock/road1.png: %p\n", road_tile[0]);
 			output_debug_message("graphics/stock/road2.png: %p\n", road_tile[1]);
 			output_debug_message("graphics/stock/road3.png: %p\n", road_tile[2]);
 #endif
-
 			road_ltile[0] = new GLTile("graphics/stock/lroad.png");
 			road_ltile[1] = new GLTile("graphics/stock/lroad-chicane.png");
 			road_rtile[0] = new GLTile("graphics/stock/rroad.png");
 			road_rtile[1] = new GLTile("graphics/stock/rroad-chicane.png");
 			road_lines = new GLTile("graphics/stock/road-lines.png");
 #ifdef F1SPIRIT_DEBUG_MESSAGES
-
 			output_debug_message("graphics/stock/lroad.png: %p\n", road_ltile[0]);
 			output_debug_message("graphics/stock/lroad-chicane.png: %p\n", road_ltile[1]);
 			output_debug_message("graphics/stock/rroad.png: %p\n", road_rtile[0]);
 			output_debug_message("graphics/stock/rroad-chicane.png: %p\n", road_rtile[1]);
 			output_debug_message("graphics/stock/road-lines.png: %p\n", road_lines);
 #endif
-
 			break;
 
 		case 1:  /* RALLY: */
@@ -427,26 +338,22 @@ void F1SpiritGame::initialize_track(int ntrack)
 			road_tile[1] = new GLTile("graphics/stock/road2.png");
 			road_tile[2] = new GLTile("graphics/rally/road3.png");
 #ifdef F1SPIRIT_DEBUG_MESSAGES
-
 			output_debug_message("graphics/rally/road1.png: %p\n", road_tile[0]);
 			output_debug_message("graphics/stock/road2.png: %p\n", road_tile[1]);
 			output_debug_message("graphics/rally/road3.png: %p\n", road_tile[2]);
 #endif
-
 			road_ltile[0] = new GLTile("graphics/stock/lroad.png");
 			road_ltile[1] = new GLTile("graphics/rally/lroad-chicane.png");
 			road_rtile[0] = new GLTile("graphics/stock/rroad.png");
 			road_rtile[1] = new GLTile("graphics/rally/rroad-chicane.png");
 			road_lines = new GLTile("graphics/stock/road-lines.png");
 #ifdef F1SPIRIT_DEBUG_MESSAGES
-
 			output_debug_message("graphics/stock/lroad.png: %p\n", road_ltile[0]);
 			output_debug_message("graphics/rally/lroad-chicane.png: %p\n", road_ltile[1]);
 			output_debug_message("graphics/stock/rroad.png: %p\n", road_rtile[0]);
 			output_debug_message("graphics/rally/rroad-chicane.png: %p\n", road_rtile[1]);
 			output_debug_message("graphics/stock/road-lines.png: %p\n", road_lines);
 #endif
-
 			break;
 
 		case 10:  /* F1-FRANCE */
@@ -454,19 +361,16 @@ void F1SpiritGame::initialize_track(int ntrack)
 			road_tile[1] = new GLTile("graphics/stock/road2.png");
 			road_tile[2] = new GLTile("graphics/f1-france/road3.png");
 #ifdef F1SPIRIT_DEBUG_MESSAGES
-
 			output_debug_message("graphics/stock/road1.png: %p\n", road_tile[0]);
 			output_debug_message("graphics/stock/road2.png: %p\n", road_tile[1]);
 			output_debug_message("graphics/f1-france/road3.png: %p\n", road_tile[2]);
 #endif
-
 			road_ltile[0] = new GLTile("graphics/stock/lroad.png");
 			road_ltile[1] = new GLTile("graphics/f1-france/lroad-chicane.png");
 			road_rtile[0] = new GLTile("graphics/stock/rroad.png");
 			road_rtile[1] = new GLTile("graphics/f1-france/rroad-chicane.png");
 			road_lines = new GLTile("graphics/stock/road-lines.png");
 #ifdef F1SPIRIT_DEBUG_MESSAGES
-
 			output_debug_message("graphics/stock/lroad.png: %p\n", road_ltile[0]);
 			output_debug_message("graphics/f1-france/lroad-chicane.png: %p\n", road_ltile[1]);
 			output_debug_message("graphics/stock/rroad.png: %p\n", road_rtile[0]);
@@ -486,21 +390,18 @@ void F1SpiritGame::initialize_track(int ntrack)
 			output_debug_message("graphics/stock/road2.png: %p\n", road_tile[1]);
 			output_debug_message("graphics/f1-france/road3.png: %p\n", road_tile[2]);
 #endif
-
 			road_ltile[0] = new GLTile("graphics/stock/lroad.png");
 			road_ltile[1] = new GLTile("graphics/f1-westgermany/lroad-chicane.png");
 			road_rtile[0] = new GLTile("graphics/stock/rroad.png");
 			road_rtile[1] = new GLTile("graphics/f1-westgermany/rroad-chicane.png");
 			road_lines = new GLTile("graphics/stock/road-lines.png");
 #ifdef F1SPIRIT_DEBUG_MESSAGES
-
 			output_debug_message("graphics/stock/lroad.png: %p\n", road_ltile[0]);
 			output_debug_message("graphics/f1-france/lroad-chicane.png: %p\n", road_ltile[1]);
 			output_debug_message("graphics/stock/rroad.png: %p\n", road_rtile[0]);
 			output_debug_message("graphics/f1-france/rroad-chicane.png: %p\n", road_rtile[1]);
 			output_debug_message("graphics/stock/road-lines.png: %p\n", road_lines);
 #endif
-
 			break;
 
 		default:  /* F3,F3000, ENDURANCE, F1: */
@@ -508,26 +409,22 @@ void F1SpiritGame::initialize_track(int ntrack)
 			road_tile[1] = new GLTile("graphics/stock/road2.png");
 			road_tile[2] = new GLTile("graphics/stock/road3.png");
 #ifdef F1SPIRIT_DEBUG_MESSAGES
-
 			output_debug_message("graphics/stock/road1.png: %p\n", road_tile[0]);
 			output_debug_message("graphics/stock/road2.png: %p\n", road_tile[1]);
 			output_debug_message("graphics/stock/road3.png: %p\n", road_tile[2]);
 #endif
-
 			road_ltile[0] = new GLTile("graphics/stock/lroad.png");
 			road_ltile[1] = new GLTile("graphics/stock/lroad-chicane.png");
 			road_rtile[0] = new GLTile("graphics/stock/rroad.png");
 			road_rtile[1] = new GLTile("graphics/stock/rroad-chicane.png");
 			road_lines = new GLTile("graphics/stock/road-lines.png");
 #ifdef F1SPIRIT_DEBUG_MESSAGES
-
 			output_debug_message("graphics/stock/lroad.png: %p\n", road_ltile[0]);
 			output_debug_message("graphics/stock/lroad-chicane.png: %p\n", road_ltile[1]);
 			output_debug_message("graphics/stock/rroad.png: %p\n", road_rtile[0]);
 			output_debug_message("graphics/stock/rroad-chicane.png: %p\n", road_rtile[1]);
 			output_debug_message("graphics/stock/road-lines.png: %p\n", road_lines);
 #endif
-
 	} 
 
 #ifdef F1SPIRIT_DEBUG_MESSAGES
@@ -549,59 +446,35 @@ void F1SpiritGame::initialize_track(int ntrack)
 			i = 5;
 
 		delete []race_sfx_folder;
-
 		delete []race_default_sfx_folder;
-
 		race_sfx_folder = new char[strlen(folders[i]) + 1];
-
 		strcpy(race_sfx_folder, folders[i]);
-
 		race_default_sfx_folder = new char[strlen(folders[0]) + 1];
-
 		strcpy(race_default_sfx_folder, folders[0]);
 
-
 		S_outof_fuel = load_sfx(race_sfx_folder, race_default_sfx_folder, "car_fuel");
-
 		S_water_splash = load_sfx(race_sfx_folder, race_default_sfx_folder, "water_splash");
-
 		S_squeal = load_sfx(race_sfx_folder, race_default_sfx_folder, "tire_squeal");
-
 		S_car_pass = load_sfx(race_sfx_folder, race_default_sfx_folder, "car_pass");
-
 		S_car_hit1 = load_sfx(race_sfx_folder, race_default_sfx_folder, "car_hit1");
-
 		S_car_hit2 = load_sfx(race_sfx_folder, race_default_sfx_folder, "car_hit2");
-
 		S_car_hit3 = load_sfx(race_sfx_folder, race_default_sfx_folder, "car_hit3");
-
 		S_car_hit4 = load_sfx(race_sfx_folder, race_default_sfx_folder, "car_hit4");
-
 		S_car_brake = load_sfx(race_sfx_folder, race_default_sfx_folder, "car_brake");
-
 		S_car_engine = load_sfx(race_sfx_folder, race_default_sfx_folder, "car_running");
-
 		S_semaphore_high = load_sfx(race_sfx_folder, race_default_sfx_folder, "semaphore_high");
-
 		S_semaphore_low = load_sfx(race_sfx_folder, race_default_sfx_folder, "semaphore_low");
-
 		S_race_finished = load_sfx(race_sfx_folder, race_default_sfx_folder, "car_finish");
-
 		S_chicane = load_sfx(race_sfx_folder, race_default_sfx_folder, "curbs");
-
 		S_rain = load_sfx(race_sfx_folder, race_default_sfx_folder, "rain");
 	}
 
 #ifdef F1SPIRIT_DEBUG_MESSAGES
 	output_debug_message("SFX loaded\n");
-
 #endif
 
-
 #ifdef F1SPIRIT_DEBUG_MESSAGES
-
 	output_debug_message("Loading Tiles...\n");
-
 #endif
 
 	/* Load tiles: */
@@ -629,239 +502,130 @@ void F1SpiritGame::initialize_track(int ntrack)
 		} 
 
 		sfc = IMG_Load("graphics/stock/tiles.png");
-
 		tiles.Add(new GLTile(sfc, 0, 64, 48, 48)); /* 1 */
-
 		tiles.Add(new GLTile(sfc, 0, 112, 48, 48));
-
 		tiles.Add(new GLTile(sfc, 0, 160, 64, 48));
-
 		SDL_FreeSurface(sfc);
-
 		n_wood_tiles = 3;
-
 		wood_tiles[0] = tiles[1];
-
 		wood_tiles[1] = tiles[2];
-
 		wood_tiles[2] = tiles[3];
-
 		sfc = IMG_Load("graphics/stock/arrows.png");
-
 		tiles.Add(new GLTile(sfc, 0, 0, 32, 32)); /* 4 */
-
 		tiles.Add(new GLTile(sfc, 0, 32, 32, 32));
-
 		tiles.Add(new GLTile(sfc, 0, 64, 32, 32));
-
 		tiles.Add(new GLTile(sfc, 0, 96, 32, 32));
-
 		SDL_FreeSurface(sfc);
-
 		sfc = IMG_Load("graphics/stock/pit.png");
-
 		tiles.Add(new GLTile(sfc, 0, 0, 32, 48));
-
 		tiles.Add(new GLTile(sfc, 0, 48, 32, 48));
-
 		SDL_FreeSurface(sfc);
-
 		sfc = IMG_Load("graphics/stock/fences.png");
-
 		tiles.Add(new GLTile(sfc, 0, 0, 64, 64)); /* 10 */
-
 		tiles.Add(new GLTile(sfc, 0, 64, 64, 64));
-
 		tiles.Add(new GLTile(sfc, 0, 128, 64, 64));
-
 		tiles.Add(new GLTile(sfc, 0, 192, 64, 64));
-
 		tiles.Add(new GLTile(sfc, 0, 256, 64, 64));
-
 		tiles.Add(new GLTile(sfc, 0, 320, 64, 64));
-
 		tiles.Add(new GLTile(sfc, 0, 388, 64, 64));
-
 		tiles.Add(new GLTile(sfc, 64, 64, 64, 64));
-
 		tiles.Add(new GLTile(sfc, 64, 128, 64, 64));
-
 		tiles.Add(new GLTile(sfc, 64, 192, 64, 64));
-
 		tiles.Add(new GLTile(sfc, 64, 256, 64, 128));
-
 		SDL_FreeSurface(sfc);
 
 		sfc = IMG_Load("graphics/stock/crowd.png");
-
 		tiles.Add(new GLTile(sfc, 0, 0, 80, 64)); /* 21 */
-
 		tiles.Add(new GLTile(sfc, 0, 64, 80, 64));
-
 		tiles.Add(new GLTile(sfc, 0, 384, 80, 64));
-
 		tiles.Add(new GLTile(sfc, 80, 0, 48, 64));
-
 		tiles.Add(new GLTile(sfc, 80, 64, 48, 64));
-
 		tiles.Add(new GLTile(sfc, 80, 128, 48, 64));
-
 		tiles.Add(new GLTile(sfc, 80, 192, 48, 64));
-
 		tiles.Add(new GLTile(sfc, 80, 256, 48, 64));
-
 		tiles.Add(new GLTile(sfc, 80, 320, 48, 64));
-
 		tiles.Add(new GLTile(sfc, 80, 384, 48, 64));
-
 		tiles.Add(new GLTile(sfc, 128, 0, 32, 64)); /* 31 */
-
 		tiles.Add(new GLTile(sfc, 128, 64, 32, 64));
-
 		tiles.Add(new GLTile(sfc, 128, 128, 32, 64));
-
 		tiles.Add(new GLTile(sfc, 160, 0, 48, 64));
-
 		tiles.Add(new GLTile(sfc, 160, 64, 48, 64));
-
 		tiles.Add(new GLTile(sfc, 160, 128, 48, 64));
-
 		tiles.Add(new GLTile(sfc, 128, 192, 96, 64)); /* 37 */
-
 		tiles.Add(new GLTile(sfc, 224, 192, 32, 64));
-
 		tiles.Add(new GLTile(sfc, 224, 256, 32, 64));
-
 		tiles.Add(new GLTile(sfc, 224, 320, 32, 64));
-
 		tiles.Add(new GLTile(sfc, 256, 0, 128, 64));
-
 		SDL_FreeSurface(sfc);
 
 		sfc = IMG_Load("graphics/rally/tiles.png");
-
 		tiles.Add(new GLTile(sfc, 0, 0, 64, 64)); /* 42 */
-
 		SDL_FreeSurface(sfc);
 
 		sfc = IMG_Load("graphics/rally/walls.png");
-
 		tiles.Add(new GLTile(sfc, 0, 0, 32, 32)); /* 43 */
-
 		tiles.Add(new GLTile(sfc, 0, 32, 32, 32));
-
 		tiles.Add(new GLTile(sfc, 32, 32, 32, 32));
-
 		tiles.Add(new GLTile(sfc, 64, 32, 32, 32));
-
 		tiles.Add(new GLTile(sfc, 96, 32, 32, 32));
-
 		tiles.Add(new GLTile(sfc, 0, 64, 32, 32));
-
 		tiles.Add(new GLTile(sfc, 32, 64, 32, 32));
-
 		tiles.Add(new GLTile(sfc, 64, 64, 32, 32));
-
 		tiles.Add(new GLTile(sfc, 96, 64, 32, 32));
-
 		tiles.Add(new GLTile(sfc, 0, 96, 32, 32));
-
 		tiles.Add(new GLTile(sfc, 32, 96, 32, 32));
-
 		tiles.Add(new GLTile(sfc, 64, 96, 32, 32));
-
 		tiles.Add(new GLTile(sfc, 96, 96, 32, 32));
-
 		tiles.Add(new GLTile(sfc, 0, 128, 32, 32));
-
 		tiles.Add(new GLTile(sfc, 32, 128, 32, 32));
-
 		tiles.Add(new GLTile(sfc, 64, 128, 32, 32));
-
 		tiles.Add(new GLTile(sfc, 96, 128, 32, 32));
-
 		tiles.Add(new GLTile(sfc, 32, 0, 32, 32)); /* 60 */
-
 		SDL_FreeSurface(sfc);
 
 		sfc = IMG_Load("graphics/rally/extras.png");
-
 		tiles.Add(new GLTile(sfc, 0, 0, 96, 24)); /* 61 */
-
 		tiles.Add(new GLTile(sfc, 0, 24, 96, 24));
-
 		tiles.Add(new GLTile(sfc, 0, 48, 64, 160));
-
 		tiles.Add(new GLTile(sfc, 0, 208, 48, 32));
-
 		tiles.Add(new GLTile(sfc, 96, 0, 32, 64));
-
 		tiles.Add(new GLTile(sfc, 96, 64, 32, 64));
-
 		tiles.Add(new GLTile(sfc, 96, 128, 32, 64));
-
 		SDL_FreeSurface(sfc);
-
 		water_tile = tiles[63];
 
 		sfc = IMG_Load("graphics/rally/crowd.png");
-
 		tiles.Add(new GLTile(sfc, 0, 0, 32, 64)); /* 68 */
-
 		tiles.Add(new GLTile(sfc, 0, 64, 32, 64));
-
 		tiles.Add(new GLTile(sfc, 0, 128, 32, 64));
-
 		tiles.Add(new GLTile(sfc, 32, 0, 32, 64));
-
 		tiles.Add(new GLTile(sfc, 32, 64, 32, 64));
-
 		tiles.Add(new GLTile(sfc, 32, 128, 32, 64));
-
 		tiles.Add(new GLTile(sfc, 64, 0, 64, 64));
-
 		SDL_FreeSurface(sfc);
 
 		sfc = IMG_Load("graphics/f3/lfences.png");
-
 		tiles.Add(new GLTile(sfc, 0, 0, 64, 64)); /* 75 */
-
 		tiles.Add(new GLTile(sfc, 0, 64, 64, 64));
-
 		tiles.Add(new GLTile(sfc, 0, 128, 64, 64));
-
 		tiles.Add(new GLTile(sfc, 0, 192, 64, 64));
-
 		tiles.Add(new GLTile(sfc, 0, 256, 64, 64));
-
 		tiles.Add(new GLTile(sfc, 0, 320, 64, 64));
-
 		tiles.Add(new GLTile(sfc, 0, 388, 64, 64));
-
 		tiles.Add(new GLTile(sfc, 64, 64, 64, 64));
-
 		tiles.Add(new GLTile(sfc, 64, 128, 64, 64));
-
 		tiles.Add(new GLTile(sfc, 64, 192, 64, 64));
-
 		tiles.Add(new GLTile(sfc, 64, 256, 64, 128));
-
 		SDL_FreeSurface(sfc);
 
 		sfc = IMG_Load("graphics/f3/rfences.png");
-
 		tiles.Add(new GLTile(sfc, 0, 0, 32, 64)); /* 86 */
-
 		tiles.Add(new GLTile(sfc, 0, 64, 32, 64));
-
 		tiles.Add(new GLTile(sfc, 0, 128, 32, 64));
-
 		SDL_FreeSurface(sfc);
 
 		sfc = IMG_Load("graphics/rally/extras.png");
-
 		tiles.Add(new GLTile(sfc, 0, 240, 80, 224)); /* 89 */
-
 		SDL_FreeSurface(sfc);
 
 		if (ntrack == 16) {
@@ -899,41 +663,28 @@ void F1SpiritGame::initialize_track(int ntrack)
 		} 
 
 		sfc = IMG_Load("graphics/endurance/extras.png");
-
 		tiles.Add(new GLTile(sfc, 0, 0, 64, 48)); /* 94 */
-
 		tiles.Add(new GLTile(sfc, 0, 48, 16, 64));
-
 		tiles.Add(new GLTile(sfc, 0, 112, 80, 16));
-
 		tiles.Add(new GLTile(sfc, 0, 128, 56, 40));
-
 		tiles.Add(new GLTile(sfc, 0, 168, 40, 56));
-
 		tiles.Add(new GLTile(sfc, 0, 224, 40, 20));
-
 		SDL_FreeSurface(sfc);
 
 		sfc = IMG_Load("graphics/rally/rock.png");
-
 		tiles.Add(new GLTile(sfc, 0, 0, 24, 16)); /* 100 */
-
 		SDL_FreeSurface(sfc);
-
 		rock_tile = tiles[100];
 
 	}
 
 #ifdef F1SPIRIT_DEBUG_MESSAGES
 	output_debug_message("Tiles loaded\n");
-
 #endif
 
 
 #ifdef F1SPIRIT_DEBUG_MESSAGES
-
 	output_debug_message("Loading Track...\n");
-
 #endif
 
 
@@ -968,7 +719,6 @@ void F1SpiritGame::initialize_track(int ntrack)
 		                         };
 
 #ifdef F1SPIRIT_DEBUG_MESSAGES
-
 		output_debug_message("File nr %i\n", ntrack);
 		output_debug_message("File: %s\n", tracks[ntrack]);
 #endif
@@ -991,7 +741,6 @@ void F1SpiritGame::initialize_track(int ntrack)
 
 #ifdef F1SPIRIT_DEBUG_MESSAGES
 	output_debug_message("Track loaded: %p\n", track);
-
 #endif
 
 	track->get_road()->Rewind();
@@ -1001,9 +750,7 @@ void F1SpiritGame::initialize_track(int ntrack)
 
 
 #ifdef F1SPIRIT_DEBUG_MESSAGES
-
 	output_debug_message("Generating clouds...");
-
 #endif
 
 	{
@@ -1096,7 +843,7 @@ void F1SpiritGame::initialize_track(int ntrack)
 } 
 
 
-F1SpiritGame::F1SpiritGame(CPlayerInfo *player, int ntrack, int nplayers, int max_cars, int enemy_speed, int *selected_car, int **selected_part, SDL_Surface *f, KEYBOARDSTATE *k)
+F1SpiritGame::F1SpiritGame(CPlayerInfo *player, int ntrack, int nplayers, int max_cars, int enemy_speed, int *selected_car, int **selected_part, SDL_Surface *f, KEYBOARDSTATE *k, int c4a)
 {
 	// int max_cars=2;
 	int n_enemy_cars = 1;
@@ -1180,7 +927,7 @@ F1SpiritGame::F1SpiritGame(CPlayerInfo *player, int ntrack, int nplayers, int ma
 			effective_handycap_decrement *= 0.8F;
 
 		if (enemy_speed == 0)
-			effective_base_handycap *= 0.95;
+			effective_base_handycap *= (c4a)?0.85:0.95;
 
 		if (enemy_speed == 2)
 			effective_base_handycap *= 1.05;
@@ -1416,13 +1163,9 @@ F1SpiritGame::F1SpiritGame(CPlayerInfo *player, int ntrack, int nplayers, int ma
 
 				default:
 					v->vx = 322 * int(i / 2);
-
 					v->vdx = 318;
-
 					v->vy = 240 * (i % 2);
-
 					v->vdy = 238;
-
 					break;
 			} 
 
@@ -1542,45 +1285,29 @@ F1SpiritGame::F1SpiritGame(CPlayerInfo *player, int ntrack, int nplayers, int ma
 #endif
 
 	} 
-
 	race_sfx_channel = race_first_sfx_channel;
-
 #ifdef F1SPIRIT_DEBUG_MESSAGES
-
 	output_debug_message("All players created.\n");
-
 #endif
-
 	race_time = 0;
-
-	race_nlaps = race_laps[ntrack];
-
+	if (c4a)
+		race_nlaps = race_lapsc4a[ntrack];
+	else
+		race_nlaps = race_laps[ntrack];
 	race_state = 0;
-
 	race_state_timmer = 0;
-
 	race_semaphore_timmer = 0;
-
 	/* Prepare to save a replay: */
 	replay_filename = new char[strlen("replays/tmp.rpl") + 1];
-
 	strcpy(replay_filename, "replays/tmp.rpl");
-
 	replay_fp = 0;
-
 	replay_fp = f1open(replay_filename, "wb+", USERDATA);
-
 	replay_cycle = 0;
 
-
 #ifdef F1SPIRIT_DEBUG_MESSAGES
-
 	output_debug_message("OK.\n");
-
 #endif
-
 	rg->RandomInit(0);
-
 } 
 
 
@@ -1916,39 +1643,23 @@ F1SpiritGame::F1SpiritGame(CReplayInfo *ri, SDL_Surface *f, KEYBOARDSTATE *k)
 	} 
 
 	race_sfx_channel = race_first_sfx_channel;
-
 #ifdef F1SPIRIT_DEBUG_MESSAGES
-
 	output_debug_message("All players created.\n");
-
 #endif
-
 	race_time = 0;
-
 	race_nlaps = race_laps[ri->track_num];
-
 	race_state = 0;
-
 	race_state_timmer = 0;
-
 	race_semaphore_timmer = 0;
-
 	/* Do not prepare to save a replay, since this is a game created to SEE a replay: */
 	replay_filename = 0;
-
 	replay_fp = 0;
-
 	replay_cycle = 0;
 
-
 #ifdef F1SPIRIT_DEBUG_MESSAGES
-
 	output_debug_message("OK.\n");
-
 #endif
-
 	rg->RandomInit(0);
-
 } 
 
 
@@ -3392,18 +3103,17 @@ void F1SpiritGame::draw(bool draw_scoreboard)
 	l.Instance(player_cars);
 	l.Rewind();
 
+	GLfloat val[4];
+	float fx = 1.0F, fy = 1.0F;
+
+	glGetFloatv(GL_VIEWPORT, val);
+	fx = val[2]* (1.0f / 640.0F);
+	fy = val[3]* (1.0f/ 480.0F);
+
 	while (l.Iterate(v)) {
 
 		//  v->c_z=0.25;
-
 		{
-			GLfloat val[4];
-			float fx = 1.0F, fy = 1.0F;
-
-			glGetFloatv(GL_VIEWPORT, val);
-			fx = val[2] / 640.0F;
-			fy = val[3] / 480.0F;
-
 			glEnable( GL_SCISSOR_TEST );
 			glScissor(int(val[0] + v->vx*fx), int(val[1] + (480 - (v->vy + v->vdy))*fy), int(v->vdx*fx), int(v->vdy*fy));
 		}
@@ -3940,12 +3650,30 @@ void F1SpiritGame::draw(bool draw_scoreboard)
 
 		glNormal3f(0.0, 0.0, 1.0);
 
+		#ifdef PANDORA
+		#define MINX -80
+		#define MAXX 800-80
+		#else
+		#define MINX 0
+		#define MAXX 640
+		#endif
+		#ifdef HAVE_GLES
+		GLfloat vtx[] = {MINX, 0, -4, 
+						 MINX, 480, -4, 
+						 MAXX, 480, -4,
+						 MAXX, 0, -4 };
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glVertexPointer(3, GL_FLOAT, 0, vtx);
+		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+		glDisableClientState(GL_VERTEX_ARRAY);
+		#else
 		glBegin(GL_QUADS);
 		glVertex3f(0, 0, -4);
 		glVertex3f(0, 480, -4);
 		glVertex3f(640, 480, -4);
 		glVertex3f(640, 0, -4);
 		glEnd();
+		#endif
 
 	} 
 
@@ -3965,12 +3693,23 @@ void F1SpiritGame::draw(bool draw_scoreboard)
 
 		glNormal3f(0.0, 0.0, 1.0);
 
+		#ifdef HAVE_GLES
+		GLfloat vtx[] = {MINX, 0, -4, 
+						 MINX, 480, -4, 
+						 MAXX, 480, -4,
+						 MAXX, 0, -4 };
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glVertexPointer(3, GL_FLOAT, 0, vtx);
+		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+		glDisableClientState(GL_VERTEX_ARRAY);
+		#else
 		glBegin(GL_QUADS);
 		glVertex3f(0, 0, -4);
 		glVertex3f(0, 480, -4);
 		glVertex3f(640, 480, -4);
 		glVertex3f(640, 0, -4);
 		glEnd();
+		#endif
 	} 
 
 } 
@@ -3979,12 +3718,17 @@ void F1SpiritGame::draw(bool draw_scoreboard)
 void F1SpiritGame::draw_dispersed_hud(PlayerCCar *v)
 {
 	char tmp[80];
+	#ifdef PANDORA
+	#define ADDX 80
+	#else
+	#define ADDX 0
+	#endif
 
 	/* Fixed part: */
-	hud_fixed_1->draw(float(v->vx), float(v->vy), 0, 0, 1);
-	hud_fixed_2->draw(float(v->vx + 440), float(v->vy), 0, 0, 1);
-	hud_fixed_3->draw(float(v->vx), float(v->vy + 340), 0, 0, 1);
-	hud_fixed_4->draw(float(v->vx + 498), float(v->vy + 432), 0, 0, 1);
+	hud_fixed_1->draw(float(v->vx - ADDX), float(v->vy), 0, 0, 1);
+	hud_fixed_2->draw(float(v->vx + ADDX + 440), float(v->vy), 0, 0, 1);
+	hud_fixed_3->draw(float(v->vx - ADDX), float(v->vy + 340), 0, 0, 1);
+	hud_fixed_4->draw(float(v->vx + ADDX + 498), float(v->vy + 432), 0, 0, 1);
 
 	/* Variable part: */
 	/* TIMES: */
@@ -4029,7 +3773,7 @@ void F1SpiritGame::draw_dispersed_hud(PlayerCCar *v)
 					j = 9;
 			} 
 
-			hud_time_font[j]->draw(v->vx + x, v->vy + 9, 0, 0, 1);
+			hud_time_font[j]->draw(v->vx + x + ADDX, v->vy + 9, 0, 0, 1);
 
 			x += 14;
 		} 
@@ -4064,7 +3808,7 @@ void F1SpiritGame::draw_dispersed_hud(PlayerCCar *v)
 					j = 9;
 			} 
 
-			hud_time_font[j]->draw(v->vx + x, v->vy + 33, 0, 0, 1);
+			hud_time_font[j]->draw(v->vx + ADDX + x, v->vy + 33, 0, 0, 1);
 
 			x += 14;
 		} 
@@ -4106,7 +3850,7 @@ void F1SpiritGame::draw_dispersed_hud(PlayerCCar *v)
 					j = 9;
 			} 
 
-			hud_time_font[j]->draw(v->vx + x, v->vy + 57, 0, 0, 1);
+			hud_time_font[j]->draw(v->vx + ADDX + x, v->vy + 57, 0, 0, 1);
 
 			x += 14;
 		} 
@@ -4132,7 +3876,7 @@ void F1SpiritGame::draw_dispersed_hud(PlayerCCar *v)
 					j = 9;
 			} 
 
-			hud_time_font[j]->draw(v->vx + x, v->vy + 27, 0, 0, 1);
+			hud_time_font[j]->draw(v->vx + x - ADDX, v->vy + 27, 0, 0, 1);
 
 			x += 14;
 		} 
@@ -4158,7 +3902,7 @@ void F1SpiritGame::draw_dispersed_hud(PlayerCCar *v)
 					j = 9;
 			} 
 
-			hud_time_font[j]->draw(v->vx + x, v->vy + 27, 0, 0, 1);
+			hud_time_font[j]->draw(v->vx + x - ADDX, v->vy + 27, 0, 0, 1);
 
 			x += 14;
 		} 
@@ -4183,14 +3927,14 @@ void F1SpiritGame::draw_dispersed_hud(PlayerCCar *v)
 			w = 20;
 
 			//   if (j==1) w=10;
-			hud_speed_font[j]->draw(v->vx + x - w, v->vy + 438, 0, 0, 1);
+			hud_speed_font[j]->draw(v->vx + x - w + ADDX, v->vy + 438, 0, 0, 1);
 
 			x -= w;
 		} 
 	}
 
 	/* GEAR: */
-	hud_gear[v->car->get_currentgear()]->draw(float(v->vx + 613), float(v->vy + 447), 0, 0, 1);
+	hud_gear[v->car->get_currentgear()]->draw(float(v->vx + 613 + ADDX), float(v->vy + 447), 0, 0, 1);
 
 	/* RPM: */
 	{
@@ -4204,7 +3948,7 @@ void F1SpiritGame::draw_dispersed_hud(PlayerCCar *v)
 			n = 11;
 
 		if (n > 0) {
-			hud_rpm[n - 1]->draw(float(v->vx + 507), float(v->vy + 443), 0, 0, 1);
+			hud_rpm[n - 1]->draw(float(v->vx + 507 + ADDX), float(v->vy + 443), 0, 0, 1);
 		} 
 	}
 
@@ -4215,7 +3959,7 @@ void F1SpiritGame::draw_dispersed_hud(PlayerCCar *v)
 		int i;
 
 		for (i = 0;i < n;i++) {
-			race_fuel->draw(float(v->vx + 53) + i*16, float(v->vy + 360), 0, 0, 1);
+			race_fuel->draw(float(v->vx + 53 - ADDX) + i*16, float(v->vy + 360), 0, 0, 1);
 		} 
 	}
 
@@ -4249,7 +3993,7 @@ void F1SpiritGame::draw_dispersed_hud(PlayerCCar *v)
 				da = 1.0F;
 			} 
 
-			hud_damage->draw(dr, dg, db, da, float(v->vx + 171), float(v->vx + 400 + i*16), 0, 0, 1);
+			hud_damage->draw(dr, dg, db, da, float(v->vx + 171 - ADDX), float(v->vx + 400 + i*16), 0, 0, 1);
 		} 
 	}
 

@@ -7,8 +7,13 @@
 #include "stdlib.h"
 #include "string.h"
 
+#ifdef HAVE_GLES
+#include <GLES/gl.h>
+#include <GLES/glu.h>
+#else
 #include "GL/gl.h"
 #include "GL/glu.h"
+#endif
 #include "SDL.h"
 #include "SDL_mixer.h"
 #include "SDL_net.h"
@@ -35,6 +40,8 @@
 #include "ReplayInfo.h"
 #include "F1SpiritGame.h"
 #include "F1SpiritApp.h"
+
+#include "debug.h"
 
 #ifdef KITSCHY_DEBUG_MEMORY
 #include "debug_memorymanager.h"
@@ -111,7 +118,11 @@ void F1SpiritApp::hiscore_draw(void)
 
 	{
 		int i, j;
+		#ifdef PANDORA
+		int dx = 32, dy = 32;
+		#else
 		int dx = 16, dy = 16;
+		#endif
 
 		float x1, y1, x2, y2;
 		Vector prev_v1, prev_v2, v;
@@ -119,7 +130,31 @@ void F1SpiritApp::hiscore_draw(void)
 		bool prev;
 		glEnable(GL_COLOR_MATERIAL);
 		//  glColor3f(0.8F,0.8F,0.8F);
+		#ifdef HAVE_GLES
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glEnableClientState(GL_NORMAL_ARRAY);
+		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+		GLfloat vtx[3*1024];
+		GLfloat nrm[3*1024];
+		GLfloat tex[2*1024];
+		GLushort indices[2048];
+		glVertexPointer(3, GL_FLOAT, 0, vtx);
+		glNormalPointer(GL_FLOAT, 0, nrm);
+		glTexCoordPointer(2, GL_FLOAT, 0, tex);
+		int idx = 0;
+		int ids = 0;
+		#define GL_QUADS 0
+		#define glBegin(a)	{idx = 0; ids = 0;}
+		#define glTexCoord2f(a, b)	tex[idx*2+0]=a; tex[idx*2+1]=b
+		#define glNormal3f(a, b, c) nrm[idx*3+0]=a; nrm[idx*3+1]=b; nrm[idx*3+2]=c
+		#define glVertex3f(a, b, c)	vtx[idx*3+0]=a; vtx[idx*3+1]=b; vtx[idx*3+2]=c; idx++; if (idx%4==0) \
+			{indices[ids++]=idx-4; indices[ids++]=idx-3; indices[ids++]=idx-2; \
+			 indices[ids++]=idx-2; indices[ids++]=idx-1; indices[ids++]=idx-4; }
+		#define glEnd()		glDrawElements(GL_TRIANGLES, ids, GL_UNSIGNED_SHORT, indices);
+		glColor4f(1.0F, 1.0F, 1.0F, 1.0f);
+		#else
 		glColor3f(1.0F, 1.0F, 1.0F);
+		#endif
 		glEnable(GL_TEXTURE_2D);
 		glBindTexture(GL_TEXTURE_2D, menu_flag->get_texture(0));
 
@@ -197,6 +232,18 @@ void F1SpiritApp::hiscore_draw(void)
 
 			} 
 		} 
+	#ifdef HAVE_GLES
+	glDisableClientState(GL_VERTEX_ARRAY);
+	glDisableClientState(GL_NORMAL_ARRAY);
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+	#undef GL_QUADS
+	#undef glVertex3f
+	#undef glNormal3f
+	#undef glTexCoord2f
+	#undef glBegin
+	#undef glEnd
+	#endif
+		
 	}
 
 
@@ -476,12 +523,30 @@ void F1SpiritApp::hiscore_draw(void)
 
 		glNormal3f(0.0, 0.0, 1.0);
 
+		#ifdef PANDORA
+		#define MINX -80
+		#define MAXX 800-80
+		#else
+		#define MINX 0
+		#define MAXX 640
+		#endif
+		#ifdef HAVE_GLES
+		GLfloat vtx[] = {MINX, 0, -4, 
+						 MINX, 480, -4, 
+						 MAXX, 480, -4,
+						 MAXX, 0, -4 };
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glVertexPointer(3, GL_FLOAT, 0, vtx);
+		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+		glDisableClientState(GL_VERTEX_ARRAY);
+		#else
 		glBegin(GL_QUADS);
 		glVertex3f(0, 0, -4);
 		glVertex3f(0, 480, -4);
 		glVertex3f(640, 480, -4);
 		glVertex3f(640, 0, -4);
 		glEnd();
+		#endif
 	} 
 
 } 

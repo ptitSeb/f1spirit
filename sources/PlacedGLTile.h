@@ -29,6 +29,12 @@ class CPlacedGLTile
 
 		void draw(void);
 		void draw(float dx, float dy, float dz, float angle, float zoom);
+		
+		bool tile_in_bbox(int bbx, int bby, int bbw, int bbh) {
+			return tile->tile_in_bbox(bbx, bby, bbw, bbh);
+		};
+
+		void get_bbox(float *x, float *y, float *w, float *h);
 
 		C2DCMC *get_cmc(void) {
 			return tile->get_cmc();

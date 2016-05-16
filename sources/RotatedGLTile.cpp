@@ -2,8 +2,13 @@
 #include "windows.h"
 #endif
 
+#ifdef HAVE_GLES
+#include <GLES/gl.h>
+#include <GLES/glu.h>
+#else
 #include "GL/gl.h"
 #include "GL/glu.h"
+#endif
 #include "SDL.h"
 #include "SDL_image.h"
 
@@ -15,6 +20,14 @@
 
 #ifdef KITSCHY_DEBUG_MEMORY
 #include "debug_memorymanager.h"
+#endif
+
+#ifdef HAVE_GLES
+#define glTranslatef	glesTranslatef
+#define glRotatef		glesRotatef
+#define glPushMatrix	glesPushMatrix
+#define glPopMatrix		glesPopMatrix
+#define glColor4f		glesColor4f
 #endif
 
 CRotatedGLTile::CRotatedGLTile(float ax, float ay, float az, float aa1, float aa2, GLTile *t)
@@ -62,7 +75,6 @@ void CRotatedGLTile::draw(void)
 	} 
 } 
 
-
 void CRotatedGLTile::draw(float dx, float dy, float dz, float pangle, float zoom)
 {
 	if (tile != 0) {
@@ -76,7 +88,7 @@ void CRotatedGLTile::draw(float dx, float dy, float dz, float pangle, float zoom
 			glRotatef(angle2, 0, 1, 0);
 
 			if (different_color)
-				tile->draw(r, g, b, a, 0, 0, 0, 0, zoom);
+				tile->draw(r, g, b, a, 0.0f, 0.0f, 0.0f, 0.0f, zoom);
 			else
 				tile->draw(0, 0, 0, 0, zoom);
 
@@ -89,6 +101,12 @@ void CRotatedGLTile::draw(float dx, float dy, float dz, float pangle, float zoom
 		} 
 	} 
 } 
+#ifdef HAVE_GLES
+#undef glTranslatef
+#undef glRotatef
+#undef glPushMatrix
+#undef glPopMatrix
+#endif
 
 
 

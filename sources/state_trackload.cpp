@@ -7,8 +7,13 @@
 #include "stdlib.h"
 #include "string.h"
 
+#ifdef HAVE_GLES
+#include <GLES/gl.h>
+#include <GLES/glu.h>
+#else
 #include "GL/gl.h"
 #include "GL/glu.h"
+#endif
 #include "SDL.h"
 #include "SDL_mixer.h"
 #include "SDL_image.h"
@@ -60,7 +65,15 @@ int F1SpiritApp::trackload_cycle(KEYBOARDSTATE *k)
 
 		/* init F1SpiritGame object */
 		delete race_game;
-		race_game = new F1SpiritGame(current_player, menu_selected_track, menu_selected_nplayers, menu_multiplayer_n_enemycars, menu_multiplayer_enemy_speed, (int *)menu_selected_car, (int **)menu_selected_part, font, k);
+		if (c4a)
+		{
+			F1S_GParameters parameters;
+			parameters.load_ascii("f1spirit2.cfg");
+			menu_multiplayer_n_enemycars = parameters.race_cars[menu_selected_track];
+			menu_multiplayer_enemy_speed = 0;
+		}
+
+		race_game = new F1SpiritGame(current_player, menu_selected_track, menu_selected_nplayers, menu_multiplayer_n_enemycars, menu_multiplayer_enemy_speed, (int *)menu_selected_car, (int **)menu_selected_part, font, k, c4a);
 
 		race_state = 0;
 		race_state_timmer = 0;

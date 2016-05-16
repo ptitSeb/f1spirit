@@ -7,8 +7,13 @@
 #include "stdlib.h"
 #include "string.h"
 
+#ifdef HAVE_GLES
+#include <GLES/gl.h>
+#include <GLES/glu.h>
+#else
 #include "GL/gl.h"
 #include "GL/glu.h"
+#endif
 #include "SDL.h"
 #include "SDL_mixer.h"
 #include "SDL_net.h"
@@ -98,6 +103,21 @@ int F1SpiritApp::race_cycle(KEYBOARDSTATE *k)
 			{
 				int i;
 				bool all_completed = true;
+
+				if (c4a) {
+					if (race_game->get_racefinished())
+						if (race_game->get_player_position(0)<16 ) {	// must have points to continue
+							Uint32 points[16] = {20, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1};
+							c4a_result+=points[race_game->get_player_position(0)];
+							current_player->set_points(menu_selected_track ,points[race_game->get_player_position(0)]);
+							menu_selected_track++;
+							if (menu_selected_track<N_TRACKS)
+								return APP_STATE_TRACKLOAD;
+						}
+					else
+						menu_selected_track = N_TRACKS;	// the game was aborted...
+					return APP_STATE_RACE_RESULT;
+				}
 
 				for (i = 0;i < 20;i++)
 					if (current_player->get_points(i) != 9)

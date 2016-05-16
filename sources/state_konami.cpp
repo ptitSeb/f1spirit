@@ -7,8 +7,13 @@
 #include "stdlib.h"
 #include "string.h"
 
+#ifdef HAVE_GLES
+#include <GLES/gl.h>
+#include <GLES/glu.h>
+#else
 #include "GL/gl.h"
 #include "GL/glu.h"
+#endif
 #include "SDL.h"
 #include "SDL_mixer.h"
 #include "SDL_net.h"
@@ -59,7 +64,11 @@ int F1SpiritApp::konami_cycle(KEYBOARDSTATE *k)
 	} 
 
 	if ((k->keyboard[SDLK_ESCAPE] && !k->old_keyboard[SDLK_ESCAPE]) ||
-	        (k->keyboard[SDLK_SPACE] && !k->old_keyboard[SDLK_SPACE])) {
+	        (k->keyboard[SDLK_SPACE] && !k->old_keyboard[SDLK_SPACE])
+#ifdef PANDORA
+		||  (k->keyboard[SDLK_PAGEDOWN] && !k->old_keyboard[SDLK_PAGEDOWN]) 
+#endif
+		) {
 		m_skip_intro_screens = true;
 
 		if (state_cycle < 450) {

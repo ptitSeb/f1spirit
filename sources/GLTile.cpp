@@ -2,8 +2,13 @@
 #include "windows.h"
 #endif
 
+#ifdef HAVE_GLES
+#include <GLES/gl.h>
+#include <GLES/glu.h>
+#else
 #include "GL/gl.h"
 #include "GL/glu.h"
+#endif
 #include "SDL.h"
 #include "SDL_image.h"
 
@@ -14,6 +19,27 @@
 
 #ifdef KITSCHY_DEBUG_MEMORY
 #include "debug_memorymanager.h"
+#endif
+#ifdef HAVE_GLES
+#define glTranslatef	glesTranslatef
+#define glRotatef		glesRotatef
+#define glScalef		glesScalef
+#define glPushMatrix	glesPushMatrix
+#define glPopMatrix		glesPopMatrix
+
+#define glBegin			glesBegin
+#define glTexCoord2f	glesTexCoord2f
+#define glNormal3f		glesNormal3f
+#define	glVertex3f		glesVertex3f
+#define glColor4f		glesColor4f
+#define glBindTexture	glesBindTexture
+#define glEnd			glesEnd
+
+extern bool special;
+
+#define GL_QUADS 		0
+#else
+#define special false
 #endif
 
 int reload_textures = 0;
@@ -71,6 +97,8 @@ GLTile::GLTile(char *fname)
 	cmc = 0;
 	set
 	(fname);
+	
+//printf("Loaded GTile(\"%s\"), tex=%u, firsts pixels\n\t%x %x\n\t%x %x\n", fname, tex[0], ((int*)tile[0]->pixels)[0], ((int*)tile[0]->pixels)[1], ((int*)tile[0]->pixels)[tile[0]->pitch/4], ((int*)tile[0]->pixels)[tile[0]->pitch/4+1]);
 } 
 
 
@@ -121,7 +149,6 @@ GLTile::GLTile(char *fname, int ax, int ay, int adx, int ady)
 	tex_coord_x = 0;
 	tex_coord_y = 0;
 	tex = 0;
-
 	cmc = 0;
 
 	{
@@ -357,7 +384,7 @@ void GLTile::free(void)
 			if (tile[i] != 0) {
 				SDL_FreeSurface(tile[i]);
 				tile[i] = 0;
-				glDeleteTextures(1, &(tex[i]));
+				TM_glDeleteTextures(1, &(tex[i]));
 
 				if (tex_coord_x[i] != 0 && tex_coord_y[i] != 0)
 					memory_used -= int((dx[i] * dy[i] * 4) / (tex_coord_x[i] * tex_coord_y[i]));
@@ -365,51 +392,31 @@ void GLTile::free(void)
 		} 
 
 		delete []tile;
-
 		delete []x;
-
 		delete []y;
-
 		delete []dx;
-
 		delete []dy;
-
 		delete []tex_coord_x;
-
 		delete []tex_coord_y;
-
 		delete []tex;
 	} 
 
 	nparts = 0;
-
 	g_dx = 0;
-
 	g_dy = 0;
-
 	hot_x = 0;
-
 	hot_y = 0;
-
 	tile = 0;
-
 	x = 0;
-
 	y = 0;
-
 	dx = 0;
-
 	dy = 0;
-
 	tex_coord_x = 0;
-
 	tex_coord_y = 0;
-
 	tex = 0;
-
 	delete cmc;
-
 	cmc = 0;
+
 } // GLTile::free
 
 
@@ -754,7 +761,7 @@ void GLTile::set_hotspot(int hx, int hy)
 
 void GLTile::compute_cmc(void)
 {
-	float x[2] = {0, 0}, y[2] = {0, 0};
+	int x[2] = {0, 0}, y[2] = {0, 0};
 	bool first = true;
 	int i, j;
 	Uint32 c;
@@ -768,20 +775,20 @@ void GLTile::compute_cmc(void)
 			if ((c&AMASK) == AMASK) {
 				if (first) {
 					first = false;
-					x[0] = x[1] = float(j);
-					y[0] = y[1] = float(i);
+					x[0] = x[1] = j;
+					y[0] = y[1] = i;
 				} else {
 					if (j < x[0])
-						x[0] = float(j);
+						x[0] = j;
 
 					if (j > x[1])
-						x[1] = float(j);
+						x[1] = j;
 
 					if (i < y[0])
-						y[0] = float(i);
+						y[0] = i;
 
 					if (i > y[1])
-						y[1] = float(i);
+						y[1] = i;
 				} 
 			} 
 
@@ -789,14 +796,11 @@ void GLTile::compute_cmc(void)
 	} 
 
 	x[0] -= get_hot_x();
-
 	x[1] -= get_hot_x();
-
 	y[0] -= get_hot_y();
-
 	y[1] -= get_hot_y();
-
-	cmc = new C2DCMC(x, y, 2);
+	float fx[2]={x[0], x[1]}, fy[2]={y[0],y[1]};
+	cmc = new C2DCMC(fx, fy, 2);
 } 
 
 
@@ -831,20 +835,22 @@ void GLTile::draw(void)
 void GLTile::draw(float r, float g, float b, float a)
 {
 	int i;
-
+/*extern bool special;
+if (special) printf("draw(%f, %f, %f, %f\n", r, g, b, a);*/
 	if (textures_loaded != reload_textures)
 		load_textures();
 
-	glEnable(GL_COLOR_MATERIAL);
+	if (!special) {
+		glEnable(GL_COLOR_MATERIAL);
 
-	glEnable(GL_TEXTURE_2D);
+		glEnable(GL_TEXTURE_2D);
+	}
 
+	glColor4f(r, g, b, a);
+	glNormal3f(0.0, 0.0, 1.0);
 	for (i = 0;i < nparts;i++) {
 		glBindTexture(GL_TEXTURE_2D, tex[i]);
-
-		glColor4f(r, g, b, a);
-		glNormal3f(0.0, 0.0, 1.0);
-
+		
 		glBegin(GL_QUADS);
 		glTexCoord2f(0, 0);
 		glVertex3f(float(x[i] - hot_x), float(y[i] - hot_y), 0);
@@ -861,13 +867,15 @@ void GLTile::draw(float r, float g, float b, float a)
 		glEnd();
 	} 
 
-	glDisable(GL_TEXTURE_2D);
+	if (!special)
+		glDisable(GL_TEXTURE_2D);
 } 
-
 
 
 void GLTile::draw(float x, float y, float z, float angle, float scale)
 {
+/*extern bool special;
+if (special) printf("draw(%f, %f, %f, %f, %f) => ", x, y, z, angle, scale);*/
 	glPushMatrix();
 	glTranslatef(x, y, z);
 
@@ -1026,83 +1034,48 @@ void GLTile::optimize(int o_dx, int o_dy)
 
 		if (some_empty) {
 
-			glDeleteTextures(1, &(tex[0]));
+			TM_glDeleteTextures(1, &(tex[0]));
 
 			if (tex_coord_x[0] != 0 && tex_coord_y[0] != 0)
 				memory_used -= int((dx[0] * dy[0] * 4) / (tex_coord_x[0] * tex_coord_y[0]));
 
 			delete []tile;
-
 			delete []x;
-
 			delete []y;
-
 			delete []dx;
-
 			delete []dy;
-
 			delete []tex_coord_x;
-
 			delete []tex_coord_y;
-
 			delete []tex;
-
 			nparts = 0;
-
 			g_dx = 0;
-
 			g_dy = 0;
-
 			hot_x = 0;
-
 			hot_y = 0;
-
 			tile = 0;
-
 			x = 0;
-
 			y = 0;
-
 			dx = 0;
-
 			dy = 0;
-
 			tex_coord_x = 0;
-
 			tex_coord_y = 0;
-
 			tex = 0;
-
 
 			/* Create textures: */
 			nparts = n_non_empty;
-
 			tile = new SDL_Surface * [nparts];
-
 			x = new int[nparts];
-
 			y = new int[nparts];
-
 			dx = new int[nparts];
-
 			dy = new int[nparts];
-
 			tex_coord_x = new float[nparts];
-
 			tex_coord_y = new float[nparts];
-
 			tex = new GLuint[nparts];
-
 			g_dx = sfc->w;
-
 			g_dy = sfc->h;
-
 			hot_x = old_hsx;
-
 			hot_y = old_hsy;
-
 			k = 0;
-
 			SDL_SetAlpha(sfc, 0, 0);
 
 			for (i = 0;i < grid_dy;i++) {
@@ -1123,23 +1096,15 @@ void GLTile::optimize(int o_dx, int o_dy)
 						tile[k] = SDL_CreateRGBSurface(SDL_SWSURFACE, t_dx, t_dy, 32, RMASK, GMASK, BMASK, AMASK);
 
 						r.x = j * o_dx;
-
 						r.y = i * o_dy;
-
 						r.w = t_dx;
-
 						r.h = t_dy;
 
 						SDL_BlitSurface(sfc, &r, tile[k], 0);
-
 						x[k] = j * o_dx;
-
 						y[k] = i * o_dy;
-
 						dx[k] = t_dx;
-
 						dy[k] = t_dy;
-
 						tex[k] = createTexture(tile[k], &(tex_coord_x[k]), &(tex_coord_y[k]));
 
 						if (tex_coord_x[k] != 0 && tex_coord_y[k] != 0)
@@ -1177,3 +1142,22 @@ Uint32 GLTile::get_pixel(int ax, int ay)
 	return 0;
 } // GLTile::get_pixel
 
+bool GLTile::tile_in_bbox(int bbx, int bby, int bbw, int bbh)
+{
+	int i;
+
+	for (i = 0;i < nparts;i++) {
+	/*
+		if (bbx >= x[i]-hot_x && bbx+bbw <= x[i]-hot_x + dx[i] &&
+		        bby >= y[i]-hot_y && bby+bbh <= y[i]-hot_y + dy[i]) {
+			return true;
+		} 
+	*/
+		if (x[i]-hot_x+dx[i] < bbx || x[i]-hot_x > bbx + bbw) continue;
+		if (y[i]-hot_y+dy[i] < bby || y[i]-hot_y > bby + bbh) continue;
+		return true;
+	} 
+
+	return false;
+
+}

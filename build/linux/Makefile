@@ -1,6 +1,6 @@
 EXE = f1spirit
 SRC = sources
-PREFIX = /usr
+PREFIX = /mnt/utmp/f1spirit
 EXTRADIR = ./build/linux
 
 GAMEDIR = $(PREFIX)/games
@@ -36,12 +36,13 @@ OBJS = \
 	$(SRC)/state_replaymanager.o	$(SRC)/state_title.o			\
 	$(SRC)/state_trackload.o		$(SRC)/track.o					\
 	$(SRC)/Vector.o					$(SRC)/weather.o				\
+	$(SRC)/eglport.o 								\
 	$(SRC)/filehandling.o			$(SRC)/CarEngineSound.o
 
 CC = gcc
 #CFLAGS = -g3 -O3 -Wall `sdl-config --cflags` `curl-config --cflags` -I/usr/X11R6/include
-CFLAGS = -g3 -O3 -Wno-write-strings `sdl-config --cflags` `curl-config --cflags` -I/usr/X11R6/include
-LDFLAGS = `sdl-config --libs` `curl-config --libs` -L/usr/X11R6/lib/ -lSDL_image -lSDL_mixer -lSDL_net -lGL -lGLU
+CFLAGS = -g -gdwarf-2 -mcpu=cortex-a8 -mfpu=neon -mfloat-abi=softfp -ffast-math -O3 -Wno-write-strings -fsingle-precision-constant -fdiagnostics-color=auto -DPANDORA -DHAVE_GLES -D__USE_SDL_GLES__ `sdl-config --cflags` `curl-config --cflags` -I/mnt/utmp/codeblocks/usr/X11R6/include
+LDFLAGS = `sdl-config --libs` `curl-config --libs` -L/usr/X11R6/lib/ -lSDL_image -lSDL_mixer -lSDL_net -lm -lstdc++ -lGLES_CM -lEGL -lGLUES_CM
 RM = rm -f
 CP = cp -r
 MD = mkdir -p
@@ -56,7 +57,7 @@ all: $(EXE)
 
 $(EXE): $(OBJS)
 	$(CC) $(LDFLAGS) $^ -o $@
-	@$(STRIP) $@
+#	@$(STRIP) $@
 	@$(ECHO) " o If there are no errors, the game compiled succesfully"
 
 clean:

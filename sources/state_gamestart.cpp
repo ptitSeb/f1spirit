@@ -7,8 +7,13 @@
 #include "stdlib.h"
 #include "string.h"
 
+#ifdef HAVE_GLES
+#include <GLES/gl.h>
+#include <GLES/glu.h>
+#else
 #include "GL/gl.h"
 #include "GL/glu.h"
+#endif
 #include "SDL.h"
 #include "SDL_mixer.h"
 #include "SDL_net.h"
@@ -97,12 +102,32 @@ void F1SpiritApp::gamestart_draw(void)
 
 		glNormal3f(0.0, 0.0, -1.0);
 
+		#ifdef PANDORA
+		#define MINX -80
+		#define MAXX 800-80
+		#else
+		#define MINX 0
+		#define MAXX 640
+		#endif
+		#ifdef HAVE_GLES
+		{
+			GLfloat vtx[] = {MINX, 0, -8, 
+							 MINX, 480, -8, 
+							 MAXX, 480, -8,
+							 MAXX, 0, -8 };
+			glEnableClientState(GL_VERTEX_ARRAY);
+			glVertexPointer(3, GL_FLOAT, 0, vtx);
+			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+			glDisableClientState(GL_VERTEX_ARRAY);
+		}
+		#else
 		glBegin(GL_QUADS);
 		glVertex3f(0, 0, -8);
 		glVertex3f(0, 480, -8);
 		glVertex3f(640, 480, -8);
 		glVertex3f(640, 0, -8);
 		glEnd();
+		#endif
 	} 
 
 	if (state_cycle >= GAMESTART_FINISH) {
@@ -116,12 +141,25 @@ void F1SpiritApp::gamestart_draw(void)
 
 		glNormal3f(0.0, 0.0, -1.0);
 
+		#ifdef HAVE_GLES
+		{
+			GLfloat vtx[] = {MINX, 0, -8, 
+							 MINX, 480, -8, 
+							 MAXX, 480, -8,
+							 MAXX, 0, -8 };
+			glEnableClientState(GL_VERTEX_ARRAY);
+			glVertexPointer(3, GL_FLOAT, 0, vtx);
+			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+			glDisableClientState(GL_VERTEX_ARRAY);
+		}
+		#else
 		glBegin(GL_QUADS);
 		glVertex3f(0, 0, -8);
 		glVertex3f(0, 480, -8);
 		glVertex3f(640, 480, -8);
 		glVertex3f(640, 0, -8);
 		glEnd();
+		#endif
 	} 
 
 } 

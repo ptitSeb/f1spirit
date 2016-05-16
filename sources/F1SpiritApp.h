@@ -283,6 +283,9 @@ class F1SpiritApp
 		List<CReplayInfo> replaymanager_replays;
 		List<GLTile> replaymanager_replaytiles;
 		GLTile *replaymanager_frame1, *replaymanager_frame2;
+
+		int c4a;
+		int c4a_result;
 };
 
 #endif

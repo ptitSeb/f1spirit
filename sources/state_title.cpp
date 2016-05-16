@@ -7,8 +7,13 @@
 #include "stdlib.h"
 #include "string.h"
 
+#ifdef HAVE_GLES
+#include <GLES/gl.h>
+#include <GLES/glu.h>
+#else
 #include "GL/gl.h"
 #include "GL/glu.h"
+#endif
 #include "SDL.h"
 #include "SDL_mixer.h"
 #include "SDL_net.h"
@@ -97,7 +102,11 @@ int F1SpiritApp::title_cycle(KEYBOARDSTATE *k)
 
 
 	if (state_cycle < TITLE_TIMMER4) {
-		if (k->keyboard[SDLK_SPACE] && !k->old_keyboard[SDLK_SPACE])
+		if ((k->keyboard[SDLK_SPACE] && !k->old_keyboard[SDLK_SPACE])
+#ifdef PANDORA
+			||  (k->keyboard[SDLK_PAGEDOWN] && !k->old_keyboard[SDLK_PAGEDOWN]) 
+#endif
+			)
 			state_cycle = int(TITLE_TIMMER4);
 
 		if (k->keyboard[SDLK_ESCAPE] && !k->old_keyboard[SDLK_ESCAPE])
@@ -106,7 +115,12 @@ int F1SpiritApp::title_cycle(KEYBOARDSTATE *k)
 
 	if (state_cycle > TITLE_TIMMER4) {
 		if (title_state == 0 &&
-		        k->keyboard[SDLK_SPACE] && !k->old_keyboard[SDLK_SPACE]) {
+		        ((k->keyboard[SDLK_SPACE] && !k->old_keyboard[SDLK_SPACE]) 
+#ifdef PANDORA
+				||  (k->keyboard[SDLK_PAGEDOWN] && !k->old_keyboard[SDLK_PAGEDOWN]) )
+#endif
+		)
+		{
 			title_state = 1;
 			Sound_release_music();
 			Sound_create_music("sound/game_start", 0);
@@ -206,7 +220,11 @@ void F1SpiritApp::title_draw(void)
 		/* draw the flag: */
 		if (state_cycle < TITLE_TIMMER6) {
 			int i, j;
+			#ifdef PANDORA
+			int dx = 32, dy = 32;
+			#else
 			int dx = 16, dy = 16;
+			#endif
 			float x1, y1, x2, y2;
 			Vector prev_v1, prev_v2, v;
 			float prev_z1, prev_z2, z;
@@ -216,9 +234,36 @@ void F1SpiritApp::title_draw(void)
 
 			glEnable(GL_COLOR_MATERIAL);
 			//   glColor3f(0.8F,0.8F,0.8F);
+			#ifdef HAVE_GLES
+			glEnableClientState(GL_VERTEX_ARRAY);
+			glEnableClientState(GL_NORMAL_ARRAY);
+			glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+			GLfloat vtx[3*32768];
+			GLfloat nrm[3*32768];
+			GLfloat tex[2*32768];
+			GLushort indices[65536];
+			glVertexPointer(3, GL_FLOAT, 0, vtx);
+			glNormalPointer(GL_FLOAT, 0, nrm);
+			glTexCoordPointer(2, GL_FLOAT, 0, tex);
+			int idx = 0;
+			int ids = 0;
+			#define GL_QUADS 0
+			#define glBegin(a)	{idx = 0; ids = 0;}
+			#define glTexCoord2f(a, b)	tex[idx*2+0]=a; tex[idx*2+1]=b
+			#define glNormal3f(a, b, c) nrm[idx*3+0]=a; nrm[idx*3+1]=b; nrm[idx*3+2]=c
+			#define glVertex3f(a, b, c)	vtx[idx*3+0]=a; vtx[idx*3+1]=b; vtx[idx*3+2]=c; idx++; if (idx%4==0) \
+				{indices[ids++]=idx-4; indices[ids++]=idx-3; indices[ids++]=idx-2; \
+				 indices[ids++]=idx-2; indices[ids++]=idx-1; indices[ids++]=idx-4; }
+			#define glEnd()		glDrawElements(GL_TRIANGLES, ids, GL_UNSIGNED_SHORT, indices);
+			glColor4f(1.0F, 1.0F, 1.0F, 1.0f);
+			#else
 			glColor3f(1.0F, 1.0F, 1.0F);
+			#endif
 			glEnable(GL_TEXTURE_2D);
 			glBindTexture(GL_TEXTURE_2D, menu_flag->get_texture(0));
+			#ifdef HAVE_GLES
+			glBegin(GL_QUADS);
+			#endif
 
 			for (i = -6;i < 480 / dy + 12;i++) {
 				x1 = float((state_cycle) * 2 + ( -6) * dx);
@@ -232,7 +277,9 @@ void F1SpiritApp::title_draw(void)
 					x1 += dx;
 					x2 += dx;
 
+					#ifndef HAVE_GLES
 					glBegin(GL_QUADS);
+					#endif
 
 					if (prev) {
 						glTexCoord2f(0.25F + (j % 8)*0.0625F, 0.25F + (i % 8)*0.0625F);
@@ -288,12 +335,25 @@ void F1SpiritApp::title_draw(void)
 
 					glVertex3f(float(j*dx + dx - prev_z2 / 4), float(i*dy), prev_z2);
 
+					#ifndef HAVE_GLES
 					glEnd();
+					#endif
 
 					prev = true;
 
 				} 
 			} 
+			#ifdef HAVE_GLES
+			glEnd();
+			glDisableClientState(GL_NORMAL_ARRAY);
+			glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+			glDisableClientState(GL_VERTEX_ARRAY);
+			#undef GL_QUADS
+			#undef glVertex3f
+			#undef glTexCoord2f
+			#undef glBegin
+			#undef glEnd
+			#endif
 
 			if (state_cycle > TITLE_TIMMER6 - 50) {
 				glEnable(GL_COLOR_MATERIAL);
@@ -303,15 +363,36 @@ void F1SpiritApp::title_draw(void)
 					f = abs(int(state_cycle - TITLE_TIMMER6) + 50) / 50.0F;
 					glColor4f(0, 0, 0, f);
 				}
-
+				
+				#ifdef HAVE_GLES
+				#undef glNormal3f
+				#endif
 				glNormal3f(0.0, 0.0, 1.0);
 
+				#ifdef HAVE_GLES
+				#ifdef PANDORA
+				#define MINX -80
+				#define MAXX 800-80
+				#else
+				#define MINX 0
+				#define MAXX 640
+				#endif
+				GLfloat vtx[] = {MINX, 0, -4, 
+								 MINX, 480, -4, 
+								 MAXX, 480, -4,
+								 MAXX, 0, -4 };
+				glEnableClientState(GL_VERTEX_ARRAY);
+				glVertexPointer(3, GL_FLOAT, 0, vtx);
+				glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+				glDisableClientState(GL_VERTEX_ARRAY);
+				#else
 				glBegin(GL_QUADS);
 				glVertex3f(0, 0, -4);
 				glVertex3f(0, 480, -4);
 				glVertex3f(640, 480, -4);
 				glVertex3f(640, 0, -4);
 				glEnd();
+				#endif
 			} 
 		} else {
 			/* Draw the demo replay: */
@@ -563,12 +644,23 @@ void F1SpiritApp::title_draw(void)
 
 		glNormal3f(0.0, 0.0, 1.0);
 
+		#ifdef HAVE_GLES
+		GLfloat vtx[] = {MINX, 0, -3, 
+						 MINX, 480, -3, 
+						 MAXX, 480, -3,
+						 MAXX, 0, -3 };
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glVertexPointer(3, GL_FLOAT, 0, vtx);
+		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+		glDisableClientState(GL_VERTEX_ARRAY);
+		#else
 		glBegin(GL_QUADS);
 		glVertex3f(0, 0, -3);
 		glVertex3f(0, 480, -3);
 		glVertex3f(640, 480, -3);
 		glVertex3f(640, 0, -3);
 		glEnd();
+		#endif
 	} 
 
 	if (title_state != 0) {
@@ -582,12 +674,23 @@ void F1SpiritApp::title_draw(void)
 
 		glNormal3f(0.0, 0.0, 1.0);
 
+		#ifdef HAVE_GLES
+		GLfloat vtx[] = {MINX, 0, -4, 
+						 MINX, 480, -4, 
+						 MAXX, 480, -4,
+						 MAXX, 0, -4 };
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glVertexPointer(3, GL_FLOAT, 0, vtx);
+		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+		glDisableClientState(GL_VERTEX_ARRAY);
+		#else
 		glBegin(GL_QUADS);
 		glVertex3f(0, 0, -4);
 		glVertex3f(0, 480, -4);
 		glVertex3f(640, 480, -4);
 		glVertex3f(640, 0, -4);
 		glEnd();
+		#endif
 	} 
 
 	if (state_cycle > TITLE_TIMMER7 - 50) {
@@ -601,12 +704,23 @@ void F1SpiritApp::title_draw(void)
 
 		glNormal3f(0.0, 0.0, 1.0);
 
+		#ifdef HAVE_GLES
+		GLfloat vtx[] = {MINX, 0, -4, 
+						 MINX, 480, -4, 
+						 MAXX, 480, -4,
+						 MAXX, 0, -4 };
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glVertexPointer(3, GL_FLOAT, 0, vtx);
+		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+		glDisableClientState(GL_VERTEX_ARRAY);
+		#else
 		glBegin(GL_QUADS);
 		glVertex3f(0, 0, -4);
 		glVertex3f(0, 480, -4);
 		glVertex3f(640, 480, -4);
 		glVertex3f(640, 0, -4);
 		glEnd();
+		#endif
 	} 
 
 } 

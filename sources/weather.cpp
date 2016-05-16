@@ -11,8 +11,13 @@
 #include "string.h"
 #include <time.h>
 
+#ifdef HAVE_GLES
+#include <GLES/gl.h>
+#include <GLES/glu.h>
+#else
 #include "GL/gl.h"
 #include "GL/glu.h"
+#endif
 #include "SDL.h"
 #include "SDL_image.h"
 #include "SDL_mixer.h"
@@ -77,6 +82,17 @@ void F1SpiritGame::draw_nightmode_nostencil(PlayerCCar *v)
 
 		pc_l.Instance(player_cars);
 		pc_l.Rewind();
+		#ifdef HAVE_GLES
+		glEnableClientState(GL_VERTEX_ARRAY);
+		GLfloat vtx[3*1024];
+		glVertexPointer(3, GL_FLOAT, 0, vtx);
+		int idx = 0;
+		GLenum what;
+		#define glBegin(a)	idx = 0; what = a
+		#define glVertex3f(a, b, c)	vtx[idx*3+0]=a; vtx[idx*3+1]=b; vtx[idx*3+2]=c; idx++
+		#define glEnd()		glDrawArrays(what, 0, idx)
+		#endif
+		
 
 		while (pc_l.Iterate(pc)) {
 			if (pc->car->state != 2) {
@@ -137,6 +153,12 @@ void F1SpiritGame::draw_nightmode_nostencil(PlayerCCar *v)
 		} 
 
 		glPopMatrix();
+		#ifdef HAVE_GLES
+		glDisableClientState(GL_VERTEX_ARRAY);
+		#undef glBegin
+		#undef glVertex3f
+		#undef glEnd
+		#endif
 
 	}
 
@@ -145,12 +167,23 @@ void F1SpiritGame::draw_nightmode_nostencil(PlayerCCar *v)
 		glColor4f(0, 0, 0, 0.75F);
 		glNormal3f(0.0, 0.0, 1.0);
 
+		#ifdef HAVE_GLES
+		GLfloat vtx[] = { -1000, -1000, -5, 
+						  -1000, 1000, -5, 
+						 1000, 1000, -5,
+						 1000, -1000, -5 };
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glVertexPointer(3, GL_FLOAT, 0, vtx);
+		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+		glDisableClientState(GL_VERTEX_ARRAY);
+		#else
 		glBegin(GL_QUADS);
 		glVertex3f( -1000, -1000, -5);
 		glVertex3f( -1000, 1000, -5);
 		glVertex3f(1000, 1000, -5);
 		glVertex3f(1000, -1000, -5);
 		glEnd();
+		#endif
 	}
 
 	glDisable( GL_DEPTH_TEST );
@@ -159,7 +192,11 @@ void F1SpiritGame::draw_nightmode_nostencil(PlayerCCar *v)
 
 void F1SpiritGame::draw_nightmode_stencil(PlayerCCar *v)
 {
+	#ifdef HAVE_GLES
+	/*TODO* save things */
+	#else
 	glPushAttrib( GL_ALL_ATTRIB_BITS );
+	#endif
 	/* Draw the car lights in the stencil buffer: */
 	{
 		int i;
@@ -181,6 +218,16 @@ void F1SpiritGame::draw_nightmode_stencil(PlayerCCar *v)
 
 		pc_l.Instance(player_cars);
 		pc_l.Rewind();
+		#ifdef HAVE_GLES
+		glEnableClientState(GL_VERTEX_ARRAY);
+		GLfloat vtx[3*1024];
+		glVertexPointer(3, GL_FLOAT, 0, vtx);
+		int idx = 0;
+		GLenum what;
+		#define glBegin(a)	idx = 0; what = a
+		#define glVertex3f(a, b, c)	vtx[idx*3+0]=a; vtx[idx*3+1]=b; vtx[idx*3+2]=c; idx++
+		#define glEnd()		glDrawArrays(what, 0, idx)
+		#endif
 
 		while (pc_l.Iterate(pc)) {
 			if (pc->car->state != 2) {
@@ -250,6 +297,12 @@ void F1SpiritGame::draw_nightmode_stencil(PlayerCCar *v)
 		} 
 
 		glPopMatrix();
+		#ifdef HAVE_GLES
+		glDisableClientState(GL_VERTEX_ARRAY);
+		#undef glBegin
+		#undef glVertex3f
+		#undef glEnd
+		#endif
 
 	}
 
@@ -262,20 +315,41 @@ void F1SpiritGame::draw_nightmode_stencil(PlayerCCar *v)
 		int i;
 		glNormal3f(0.0, 0.0, 1.0);
 
+		#ifdef HAVE_GLES
+		GLfloat vtx[] = { -1000, -1000, -4, 
+						  -1000, 1000, -4, 
+						 1000, 1000, -4,
+						 1000, -1000, -4 };
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glVertexPointer(3, GL_FLOAT, 0, vtx);
+		#endif
 		for (i = 32;i >= 0;i--) {
 			glColor4f(0, 0, 0, (32 - i)*0.025f);
 			glStencilFunc( GL_EQUAL, i, 0xFF );
 			glStencilOp( GL_KEEP, GL_KEEP, GL_KEEP );
+			#ifdef HAVE_GLES
+			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+			#else
 			glBegin(GL_QUADS);
 			glVertex3f(-1000, -1000, -4);
 			glVertex3f(-1000, 1000, -4);
 			glVertex3f(1000, 1000, -4);
 			glVertex3f(1000, -1000, -4);
 			glEnd();
+			#endif
 		} // if
+		#ifdef HAVE_GLES
+		glDisableClientState(GL_VERTEX_ARRAY);
+		#endif
+		
 	}
 
+	#ifdef HAVE_GLES
+	glDisable( GL_STENCIL_TEST );
+	/*TODO* restaure saved things */
+	#else
 	glPopAttrib();
+	#endif
 } 
 
 
@@ -292,15 +366,31 @@ void F1SpiritGame::draw_rain(PlayerCCar *v, float rain_strength)
 
 	m_rain_drops.Rewind();
 
+	#ifdef HAVE_GLES
+	glEnableClientState(GL_VERTEX_ARRAY);
+	GLfloat vtx[3*32768];
+	glVertexPointer(3, GL_FLOAT, 0, vtx);
+	int idx = 0;
+	GLenum what;
+	#define glBegin(a)	idx = 0; what = a
+	#define glVertex3f(a, b, c)	vtx[idx*3+0]=a; vtx[idx*3+1]=b; vtx[idx*3+2]=c; idx++
+	#define glEnd()		glDrawArrays(what, 0, idx)
+	#endif
+	glColor4f(0.75f, 0.75f, 1.0f, 0.5f);
+	glBegin(GL_LINES);
 	while (m_rain_drops.Iterate(rd)) {
 		if (rd->z < 0) {
 			// Draws a rain drop:
-			glColor4f(0.75f, 0.75f, 1.0f, 0.5f);
-			glBegin(GL_LINES);
 			glVertex3f(rd->x - v->c_x, rd->y - v->c_y, rd->z);
 			glVertex3f(rd->x - rd->inc_x*2 - v->c_old_x, rd->y - rd->inc_y*2 - v->c_old_y, rd->z - rd->inc_z*2);
-			glEnd();
-		} else {
+		}
+	}
+	glEnd();
+	#ifndef HAVE_GLES
+	// disbaled this effect on GLES, too taxing on the system, and not visible enough
+	m_rain_drops.Rewind();
+	while (m_rain_drops.Iterate(rd)) {
+		if (rd->z >= 0) {
 			// Rain splash
 			f = rd->z / 500.0f;
 
@@ -322,6 +412,13 @@ void F1SpiritGame::draw_rain(PlayerCCar *v, float rain_strength)
 			glEnd();
 		} // if
 	} // while
+	#endif
+	#ifdef HAVE_GLES
+	glDisableClientState(GL_VERTEX_ARRAY);
+	#undef glBegin
+	#undef glVertex3f
+	#undef glEnd
+	#endif
 
 	glPopMatrix();
 
@@ -329,26 +426,38 @@ void F1SpiritGame::draw_rain(PlayerCCar *v, float rain_strength)
 
 	glColor4f(0, 0, 0, rain_strength*0.25f);
 
+	#ifdef HAVE_GLES
+	GLfloat vtx2[] = { -1000, -1000, -5, 
+					  -1000, 1000, -5, 
+					 1000, 1000, -5,
+					 1000, -1000, -5 };
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glVertexPointer(3, GL_FLOAT, 0, vtx2);
+	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+	glDisableClientState(GL_VERTEX_ARRAY);
+	#else
 	glBegin(GL_QUADS);
-
 	glVertex3f(-1000, -1000, -4);
-
 	glVertex3f(-1000, 1000, -4);
-
 	glVertex3f(1000, 1000, -4);
-
 	glVertex3f(1000, -1000, -4);
-
 	glEnd();
+	#endif
 
 
 } 
 
 
 // quick random for rain:
+#ifdef PANDORA
+#define RAIN_RANDOM_SIZE	99999
+#define RAIN_DROPS_PER_CYCLE	80
+#define RAIN_DROPS_SPAN	700
+#else
 #define RAIN_RANDOM_SIZE	99999
 #define RAIN_DROPS_PER_CYCLE	800
 #define RAIN_DROPS_SPAN	700
+#endif
 
 bool quick_rain_random_generated = false;
 float quick_random_a[RAIN_RANDOM_SIZE];

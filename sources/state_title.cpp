@@ -115,11 +115,11 @@ int F1SpiritApp::title_cycle(KEYBOARDSTATE *k)
 
 	if (state_cycle > TITLE_TIMMER4) {
 		if (title_state == 0 &&
-		        ((k->keyboard[SDLK_SPACE] && !k->old_keyboard[SDLK_SPACE]) 
+		        ((k->keyboard[SDLK_SPACE] && !k->old_keyboard[SDLK_SPACE])
 #ifdef PANDORA
-				||  (k->keyboard[SDLK_PAGEDOWN] && !k->old_keyboard[SDLK_PAGEDOWN]) )
+				||  (k->keyboard[SDLK_PAGEDOWN] && !k->old_keyboard[SDLK_PAGEDOWN])
 #endif
-		)
+		))
 		{
 			title_state = 1;
 			Sound_release_music();

@@ -3,7 +3,10 @@
 #include "string.h"
 
 #include <curl/curl.h>
+#ifdef PANDORA
+// old version of curl here...
 #include <curl/types.h>
+#endif
 #include <curl/easy.h>
 
 #include "F1Shttp.h"

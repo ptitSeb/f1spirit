@@ -298,28 +298,35 @@ int F1SpiritApp::gameoptions_cycle(KEYBOARDSTATE *k)
 					char *volumes[5] = {"NONE", "LOW ", "MED.", "HIGH", "MAX."};
 
 					l = strlen("PLAYER 000\n") * current_player->get_nplayers() + strlen("CONTINUE\nQUIT\nRESTART\n\nMUSIC VOL: MAX.\nSFX VOL: MAX.\nPLAYER 1\nPLAYER 2\nPLAYER 3\nPLAYER 4\n") + 1;
+#ifdef HAVE_C4A
 					if (c4a)
 						l = strlen("CONTINUE\nQUIT\n\nMUSIC VOL: MAX.\nSFX VOL: MAX.\nPLAYER 1\n")+1;
+#endif
 					menu_options[0] = new char[l];
 					pos = 0;
 					{
 						int v1 = 0, v2 = 0;
 						v1 = current_player->get_music_volume() / 32;
 						v2 = current_player->get_sfx_volume() / 32;
+#ifdef HAVE_C4A
 						if (c4a)
 							sprintf(menu_options[0], "CONTINUE\nQUIT\n\nMUSIC VOL: %s\nSFX VOL: %s\n", volumes[v1], volumes[v2]);
 						else
+#endif
 							sprintf(menu_options[0], "CONTINUE\nQUIT\nRESTART\n\nMUSIC VOL: %s\nSFX VOL: %s\n", volumes[v1], volumes[v2]);
 					}
 
 					pos = strlen(menu_options[0]);
 
+#ifdef HAVE_C4A
 					if(c4a) {
 						for (i = 0;i < 1;i++) {
 							sprintf(menu_options[0] + pos, "PLAYER %i\n", i + 1);
 							pos = strlen(menu_options[0]);
 						} 
-					} else {
+					} else 
+#endif
+					{
 						for (i = 0;i < current_player->get_nplayers();i++) {
 							sprintf(menu_options[0] + pos, "PLAYER %i\n", i + 1);
 							pos = strlen(menu_options[0]);
@@ -330,21 +337,26 @@ int F1SpiritApp::gameoptions_cycle(KEYBOARDSTATE *k)
 
 					strcpy(menu_title[0], "PAUSE");
 
+#ifdef HAVE_C4A
 					if (c4a)
 						menu_noptions[0] = 5+1;
 					else
+#endif
 						menu_noptions[0] = current_player->get_nplayers() + 7;
 
 					menu_option_type[0][0] = 13;
 					menu_option_type[0][1] = 0;
 
+#ifdef HAVE_C4A
 					if (c4a) {
 						menu_option_type[0][2] = -1;
 						menu_option_type[0][3] = 15;
 						menu_option_type[0][4] = 16;
 						menu_option_type[0][5] = 11;
 						menu_option_parameter[0][5] = 22;
-					} else {
+					} else 
+#endif
+					{
 						menu_option_type[0][2] = 24;
 						menu_option_type[0][3] = -1;
 						menu_option_type[0][4] = 15;
@@ -661,11 +673,11 @@ int F1SpiritApp::gameoptions_cycle(KEYBOARDSTATE *k)
 			} 
 
 			if (menu_option_type[browsing][menu_selected[browsing]] != 2 &&
-			        ((k->keyboard[SDLK_SPACE] && !k->old_keyboard[SDLK_SPACE]) 
+			        ((k->keyboard[SDLK_SPACE] && !k->old_keyboard[SDLK_SPACE])
 #ifdef PANDORA
-					||  (k->keyboard[SDLK_PAGEDOWN] && !k->old_keyboard[SDLK_PAGEDOWN]))
+					||  (k->keyboard[SDLK_PAGEDOWN] && !k->old_keyboard[SDLK_PAGEDOWN])
 #endif
-				)
+				))
 				{
 				if (menu_option_type[browsing][menu_selected[browsing]] != 19 &&
 				        menu_option_type[browsing][menu_selected[browsing]] != 20)

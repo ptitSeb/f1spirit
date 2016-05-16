@@ -1282,7 +1282,9 @@ void F1SpiritApp::menu_draw(void)
 
 
 	/* Network menus: player list & chat window */
+#ifdef HAVE_C4A
 	if (!c4a)
+#endif
 	{
 		if (menu_playerlist_timmer > 0) {
 			float f = menu_playerlist_timmer / 50.0F;

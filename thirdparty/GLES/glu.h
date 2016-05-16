@@ -53,14 +53,7 @@
       #define GLAPI __declspec(dllimport)
    #endif
 #else
-//   #error "Platform is unsupported"
-   #include <GLES/gl.h>
-   #include <GLES/glext.h>
-   #ifndef GLAPI
-      #define GLAPI GL_API
-   #endif
-   #undef APIENTRY
-   #define APIENTRY
+   #error "Platform is unsupported"
 #endif
 
 #ifndef APIENTRYP

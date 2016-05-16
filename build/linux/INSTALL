@@ -1,0 +1,14 @@
+Dependencies:
+ SDL
+ SDL_image
+ SDL_mixer
+ SDL_net
+ CURL
+
+On Ubuntu you can get all necessary packages by typing:
+ sudo apt-get install g++ make libsdl-image1.2-dev libsdl-mixer1.2-dev libsdl-net1.2-dev libcurl3-dev
+
+Copy the Makefile in the build/linux directory to the top directory.
+(The one where there's all the subdirs, including 'sources')
+From there you can 'make' and 'make install'.
+

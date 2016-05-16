@@ -1,0 +1,13 @@
+Source: f1spirit
+Section: games
+Priority: optional
+Maintainer: Patsie <http://www.braingames.getput.com/>
+Build-Depends: debhelper (>= 7)
+Standards-Version: 3.7.3
+Homepage: http://www.braingames.getput.com/
+
+Package: f1spirit
+Architecture: any
+Depends: ${shlibs:Depends}
+Description: This is the remake of another Konami classic: F1spirit
+ It was presented to the Retro-Remakes competition 2004 and finished 13th place out of 73 contestants

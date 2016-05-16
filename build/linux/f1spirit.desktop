@@ -1,0 +1,10 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=F1-Spirit
+Comment=Classic MSX race game remade by Brain Games
+Exec=f1spirit
+Icon=f1spirit.png
+Terminal=false
+Type=Application
+Categories=Application;Game;ArcadeGame;
+StartupNotify=false

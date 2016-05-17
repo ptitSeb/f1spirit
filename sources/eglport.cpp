@@ -342,13 +342,19 @@ void OpenCfg ( const char* file )
     eglSettings[CFG_VSYNC]          = 0;
     eglSettings[CFG_FSAA]           = 0;
     eglSettings[CFG_FPS]            = 0;
+#ifdef PANDORA
     eglSettings[CFG_RED_SIZE]       = 5;
     eglSettings[CFG_GREEN_SIZE]     = 6;
     eglSettings[CFG_BLUE_SIZE]      = 5;
+#else
+    eglSettings[CFG_RED_SIZE]       = 8;
+    eglSettings[CFG_GREEN_SIZE]     = 8;
+    eglSettings[CFG_BLUE_SIZE]      = 8;
+#endif
     eglSettings[CFG_ALPHA_SIZE]     = 0;
     eglSettings[CFG_DEPTH_SIZE]     = 16;
     eglSettings[CFG_BUFFER_SIZE]    = 16;
-    eglSettings[CFG_STENCIL_SIZE]   = 0;
+    eglSettings[CFG_STENCIL_SIZE]   = 8;
 
     /* Parse INI file */
     fp = fopen( file, "r");

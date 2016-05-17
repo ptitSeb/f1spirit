@@ -13,7 +13,7 @@
 
 #ifdef HAVE_GLES
 #include <GLES/gl.h>
-#include <GLES/glu.h>
+//#include <GLES/glu.h>
 #else
 #include "GL/gl.h"
 #include "GL/glu.h"

@@ -46,10 +46,10 @@ OBJS = \
 CC = gcc
 ifeq ($(ODROID),1)
  CFLAGS = -mcpu=cortex-a9 -mfpu=neon -mfloat-abi=hard -g3 -O3 -Wall `sdl-config --cflags` `curl-config --cflags` -I/usr/X11R6/include -Ithirdparty -DHAVE_GLES -D__USE_SDL_GLES__ -DODROID -fdiagnostics-color=auto
- LDFLAGS = `sdl-config --libs` `curl-config --libs` -L/usr/X11R6/lib/ -lSDL_image -lSDL_mixer -lSDL_net -lm -lstdc++ -lGLESv1_CM -lEGL -lGLU
+ LDFLAGS = `sdl-config --libs` `curl-config --libs` -L/usr/X11R6/lib/ -lSDL_image -lSDL_mixer -lSDL_net -lm -lstdc++ -lGLESv1_CM -lEGL
 else
  CFLAGS = -g -gdwarf-2 -mcpu=cortex-a8 -mfpu=neon -mfloat-abi=softfp -ffast-math -O3 -Wno-write-strings -fsingle-precision-constant -fdiagnostics-color=auto -DPANDORA -DHAVE_GLES -DHAVE_C4A  -D__USE_SDL_GLES__ `sdl-config --cflags` `curl-config --cflags` -I/mnt/utmp/codeblocks/usr/X11R6/include
- LDFLAGS = `sdl-config --libs` `curl-config --libs` -L/usr/X11R6/lib/ -lSDL_image -lSDL_mixer -lSDL_net -lm -lstdc++ -lGLES_CM -lEGL -lGLUES_CM
+ LDFLAGS = `sdl-config --libs` `curl-config --libs` -L/usr/X11R6/lib/ -lSDL_image -lSDL_mixer -lSDL_net -lm -lstdc++ -lGLES_CM -lEGL
 endif
 CFLAGS += -Wno-write-strings
 RM = rm -f

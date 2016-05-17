@@ -9,7 +9,7 @@
 
 #ifdef HAVE_GLES
 #include <GLES/gl.h>
-#include <GLES/glu.h>
+//#include <GLES/glu.h>
 #include "eglport.h"
 #else
 #include "GL/gl.h"

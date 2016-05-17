@@ -436,11 +436,11 @@ void F1SpiritApp::menu_create_menu(void)
 				for (i = 0;i < current_player->get_nplayers();i++) {
 					menu_option_type[0][i + 2] = 11;
 #ifdef HAVE_C4A
-					menu_option_parameter[0][i + 2] = 22+c4a*210
+					menu_option_parameter[0][i + 2] = 22+c4a*210;
 #else
 					 menu_option_parameter[0][i + 2] = 22;
 #endif
-				} 
+				}
 
 				menu_option_type[0][current_player->get_nplayers() + 2] = 1;
 #ifdef HAVE_C4A

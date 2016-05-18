@@ -1,5 +1,6 @@
 --  F-1 SPIRIT REMAKE  --
 
+0.- This version
 1.- Introduction & Disclaimer
 2.- How to play
 3.- The main menu
@@ -9,6 +10,22 @@
 7.- Credits
 8.- Additional Information
 
+--  0.- THIS VERSION
+
+This is the only chapter in this document that doesn't come from BrainGames.
+This version of F1 Spirit as been modified. It now support a GLES renderer, 
+has C4A support (enable only on the Pandora) and works on the Pandora and ODROID.
+To compile on the Pandora, using the Codeblocks Command Line PND, just type
+make
+
+To compile on the ODROID, type
+make ODROID=1
+
+To compile on x86 Linux, type
+make LINUX=1
+
+Other platform can probably be added easily (like RPi), but will need some slight 
+changes in the Makefile (contact me or do a pull request if you want / have a new platform) 
 
 --  1.-  INTRODUCTION & DISCLAIMER  --
 

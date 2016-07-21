@@ -25,7 +25,13 @@ To compile on x86 Linux, type
 make LINUX=1
 
 Other platform can probably be added easily (like RPi), but will need some slight 
-changes in the Makefile (contact me or do a pull request if you want / have a new platform) 
+changes in the Makefile (contact me or do a pull request if you want / have a new platform)
+
+Here is a video of it running on an gigahertz OpenPandora
+https://www.youtube.com/watch?v=ObQXqjt7518
+
+And here running on an ODroid XU4
+https://www.youtube.com/watch?v=M7I4K3dlW34
 
 --  1.-  INTRODUCTION & DISCLAIMER  --
 
@@ -342,7 +348,7 @@ Version AC2:
 
 The BRAIN GAMES team:
 
-Programming: Santi "Popolon" Ontañón
+Programming: Santi "Popolon" OntaÃ±Ã³n
 Graphics: RamonMSX, Miikka "MP83" Poikela, Valerian, Olivier "Picili",
           Matriax
 Music/SFX: Jorrith "Jorito" Schaap 

@@ -28,10 +28,10 @@ Other platform can probably be added easily (like RPi), but will need some sligh
 changes in the Makefile (contact me or do a pull request if you want / have a new platform)
 
 Here is a video of it running on an gigahertz OpenPandora
-https://www.youtube.com/watch?v=ObQXqjt7518
+[![F1-Spirit C4A Mode on OpenPandora](https://www.youtube.com/watch?v=ObQXqjt7518)]
 
 And here running on an ODroid XU4
-https://www.youtube.com/watch?v=M7I4K3dlW34
+[![F1-Spirit on ODroid](https://www.youtube.com/watch?v=M7I4K3dlW34)]
 
 --  1.-  INTRODUCTION & DISCLAIMER  --
 

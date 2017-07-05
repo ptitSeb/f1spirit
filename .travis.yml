@@ -7,6 +7,6 @@ compiler:
 
 #Build steps
 before_install:
-    - sudo apt-get install libsdl-mixer1.2-dev libsdl-image1.2-dev libsdl-net1.2-dev libcurl4-gnutls-dev libglu-dev -y
+    - sudo apt-get install libsdl-mixer1.2-dev libsdl-image1.2-dev libsdl-net1.2-dev libcurl4-gnutls-dev libglu-dev libglm-dev -y
 
 script: make LINUX=1

@@ -18,7 +18,11 @@ Other platform can probably be added easily (like RPi), but will need some sligh
 changes in the Makefile (contact me or do a pull request if you want / have a new platform)
 
 Here is a video of it running on an gigahertz OpenPandora
+
 [![Play on Youtube](https://img.youtube.com/vi/ObQXqjt7518/0.jpg)](https://www.youtube.com/watch?v=ObQXqjt7518)
 
 And here running on an ODroid XU4
+
 [![Play on Youtube](https://img.youtube.com/vi/M7I4K3dlW34/0.jpg)](https://www.youtube.com/watch?v=M7I4K3dlW34)
+
+The original readme (with detailed how to play) can be found [here](readme.txt)

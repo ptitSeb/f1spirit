@@ -65,6 +65,45 @@ int nearest_2pow(int n)
 	return res;
 } /* nearest_2pow */
 
+int MINX = 0;
+int MAXX = 640;
+int MINY = 0;
+int MAXY = 480;
+
+int desktopW = 640;
+int desktopH = 480;
+
+int SCREENW = 640;
+int SCREENH = 480;
+int SCREENX = 0;
+int SCREENY = 0;
+
+float screenScale = 1.0f;
+
+void calcMinMax(int width, int height)
+{
+	if(width/640.0f < height/480.0f) {
+		screenScale = width/640.0f;
+		MINX = 0;
+		MAXX = width;///screenScale;
+		MINY = (480-height*screenScale)/2;
+		MAXY = height;
+	} else {
+		screenScale = height/480.f; // automatic guess the scale
+		MINX = (640-width*screenScale)/2;
+		MAXX = width;
+		MINY = 0;
+		MAXY = height;///screenScale;
+	}
+	SCREENX=-MINX/screenScale;
+	SCREENY=-MINY/screenScale;
+	SCREENW=width;
+	SCREENH=height;
+	glLineWidth((screenScale>1.0f)?screenScale:1.0f);
+}
+
+
+
 
 GLuint createTexture(SDL_Surface *sfc, float *tx, float *ty)
 {
@@ -209,7 +248,7 @@ GLuint createTextureClampSmooth(SDL_Surface *sfc, float *tx, float *ty)
 
 	return tname;
 }
-
+/*
 GLuint createTextureFromScreen(int x, int y, int dx, int dy, float *tx, float *ty)
 {
 	GLuint tname = 0;
@@ -233,7 +272,7 @@ GLuint createTextureFromScreen(int x, int y, int dx, int dy, float *tx, float *t
 
 	return tname;
 }
-
+*/
 void gl_line(int x1, int y1, int x2, int y2, float r, float g, float b)
 {
 	glColor4f(r, g, b, 1.0f);

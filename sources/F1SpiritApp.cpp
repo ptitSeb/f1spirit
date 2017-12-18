@@ -741,9 +741,9 @@ void F1SpiritApp::draw()
 
 	glClearColor(0, 0, 0, 0.0);
 
-	glViewport(0, 0, SCREEN_X, SCREEN_Y);
+	glViewport(0, 0, SCREENW, SCREENH);
 
-	ratio = (float)SCREEN_X / float(SCREEN_Y);
+	ratio = (float)SCREENW / float(SCREENH);
 
 	glMatrixMode( GL_PROJECTION );
 

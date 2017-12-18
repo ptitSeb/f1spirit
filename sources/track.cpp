@@ -421,11 +421,11 @@ void CTrack::draw(SDL_Rect *vp, float x, float y, float zoom, List<CPlacedGLTile
 	if (vp == 0) {
 		start_x = 320 - x;
 		start_y = 240 - y;
-		screen_rad = float(sqrt(640 * 640 + 480 * 480) / 2);
+		screen_rad = float(sqrt(640 * 640 + 480 * 480) * 0.5f);
 	} else {
 		start_x = vp->x + vp->w / 2 - x;
 		start_y = vp->y + vp->h / 2 - y;
-		screen_rad = float(sqrt(vp->w * vp->w + vp->h * vp->h) / 2);
+		screen_rad = float(sqrt(vp->w * vp->w + vp->h * vp->h) * 0.75f);
 	} 
 
 	screen_rad /= zoom;

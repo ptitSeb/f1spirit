@@ -104,17 +104,10 @@ void F1SpiritApp::menu_draw(void)
 
 		glNormal3f(0.0, 0.0, 1.0);
 
-		#ifdef PANDORA
-		#define MINX -80
-		#define MAXX 800-80
-		#else
-		#define MINX 0
-		#define MAXX 640
-		#endif
-		GLfloat vtx[] = {MINX, 0, -4, 
-						 MINX, 480, -4, 
-						 MAXX, 480, -4,
-						 MAXX, 0, -4 };
+		GLfloat vtx[] = {MINX, MINY, -4, 
+						 MINX, MAXY, -4, 
+						 MAXX, MAXY, -4,
+						 MAXX, MINY, -4 };
 		glEnableClientState(GL_VERTEX_ARRAY);
 		glVertexPointer(3, GL_FLOAT, 0, vtx);
 		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
@@ -433,20 +426,15 @@ void F1SpiritApp::menu_draw(void)
 					menu_trackviewing_background = new GLTile(32, 480 - (24 + 256), 256, 256);
 
 				glEnable( GL_SCISSOR_TEST );
-				#ifdef PANDORA
-				#define DELTA	80
-				#else
-				#define	DELTA 	0
-				#endif
-				glScissor(DELTA+32, 480 - (24 + 256), 256, 256);
+				glScissor(((-MINX)+32)/screenScale, ((-MINY) + 480 - (24 + 256))/screenScale, 256/screenScale, 256/screenScale);
 
-				glViewport(DELTA+32 - 42, 480 - (24 + 256), 341, 256);
+				glViewport(((-MINX)+32 - 42)/screenScale, ((-MINY) + 480 - (24 + 256))/screenScale, 341/screenScale, 256/screenScale);
 
 				menu_track_viewer->draw();
 
-				glViewport(0, 0, SCREEN_X, SCREEN_Y);
+				glViewport(0, 0, SCREENW, SCREENH);
 
-				glScissor(0, 0, 640, 480);
+				glScissor(0, 0, /*640*/SCREENW, /*480*/SCREENH);
 
 				glDisable( GL_SCISSOR_TEST );
 
@@ -1413,14 +1401,21 @@ void F1SpiritApp::menu_draw(void)
 
 		glNormal3f(0.0, 0.0, 1.0);
 
-		GLfloat vtx[] = {MINX, 0, -4, 
-						 MINX, 480, -4, 
-						 MAXX, 480, -4,
-						 MAXX, 0, -4 };
+		GLint vp[4];
+		glGetIntegerv(GL_VIEWPORT, vp);
+		glViewport(0, 0, SCREENW, SCREENH);
+
+
+		GLfloat vtx[] = {MINX, MINY, -4, 
+						 MINX, MAXY, -4, 
+						 MAXX, MAXY, -4,
+						 MAXX, MINY, -4 };
 		glEnableClientState(GL_VERTEX_ARRAY);
 		glVertexPointer(3, GL_FLOAT, 0, vtx);
 		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 		glDisableClientState(GL_VERTEX_ARRAY);
+
+		glViewport(vp[0], vp[1], vp[2], vp[3]);
 	} 
 
 } 

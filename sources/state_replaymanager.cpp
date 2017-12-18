@@ -545,7 +545,7 @@ void F1SpiritApp::replaymanager_draw(void)
 			int y = 32 - replaymanager_first * 16;
 
 			glEnable( GL_SCISSOR_TEST );
-			glScissor(24, 48, 328, 400);
+			glScissor(24/screenScale, 48/screenScale, 328/screenScale, 400/screenScale);
 
 			l.Instance(replaymanager_replays);
 			l.Rewind();
@@ -753,17 +753,10 @@ void F1SpiritApp::replaymanager_draw(void)
 
 		glNormal3f(0.0, 0.0, 1.0);
 
-		#ifdef PANDORA
-		#define MINX -80
-		#define MAXX 800-80
-		#else
-		#define MINX 0
-		#define MAXX 640
-		#endif
-		GLfloat vtx[] = {MINX, 0, -4, 
-						 MINX, 480, -4, 
-						 MAXX, 480, -4,
-						 MAXX, 0, -4 };
+		GLfloat vtx[] = {MINX, MINY, -4, 
+						 MINX, MAXY, -4, 
+						 MAXX, MAXY, -4,
+						 MAXX, MINY, -4 };
 		glEnableClientState(GL_VERTEX_ARRAY);
 		glVertexPointer(3, GL_FLOAT, 0, vtx);
 		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
@@ -780,14 +773,15 @@ void F1SpiritApp::replaymanager_draw(void)
 		dx = 200 + (640 - 200) * f;
 		dy = 150 + (480 - 150) * f;
 		x = 412 + (0 - 412) * f;
-		#ifdef PANDORA
-		x+=80;
-		#endif
+
 		y = 292 + (0 - 292) * f;
 
-		glViewport(int(x), int(y), int(dx), int(dy));
+		x+=-MINX;
+		y+=-MINY;
+
+		glViewport(int(x)/screenScale, int(y)/screenScale, int(dx)/screenScale, int(dy)/screenScale);
 		replaymanager_game->draw(true);
-		glViewport(0, 0, SCREEN_X, SCREEN_Y);
+		glViewport(0, 0, SCREENW, SCREENH);
 	} 
 
 	if (replaymanager_timmer >= 0 && replaymanager_state != 1) {
@@ -801,10 +795,10 @@ void F1SpiritApp::replaymanager_draw(void)
 
 		glNormal3f(0.0, 0.0, 1.0);
 
-		GLfloat vtx[] = {MINX, 0, -4, 
-						 MINX, 480, -4, 
-						 MAXX, 480, -4,
-						 MAXX, 0, -4 };
+		GLfloat vtx[] = {MINX, MINY, -4, 
+						 MINX, MAXY, -4, 
+						 MAXX, MAXY, -4,
+						 MAXX, MINY, -4 };
 		glEnableClientState(GL_VERTEX_ARRAY);
 		glVertexPointer(3, GL_FLOAT, 0, vtx);
 		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);

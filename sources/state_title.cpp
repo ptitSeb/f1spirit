@@ -352,17 +352,10 @@ void F1SpiritApp::title_draw(void)
 				#undef glNormal3f
 				glNormal3f(0.0, 0.0, 1.0);
 
-				#ifdef PANDORA
-				#define MINX -80
-				#define MAXX 800-80
-				#else
-				#define MINX 0
-				#define MAXX 640
-				#endif
-				GLfloat vtx[] = {MINX, 0, -4, 
-								 MINX, 480, -4, 
-								 MAXX, 480, -4,
-								 MAXX, 0, -4 };
+				GLfloat vtx[] = {MINX, MINY, -4, 
+								 MINX, MAXY, -4, 
+								 MAXX, MAXY, -4,
+								 MAXX, MINY, -4 };
 				glEnableClientState(GL_VERTEX_ARRAY);
 				glVertexPointer(3, GL_FLOAT, 0, vtx);
 				glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
@@ -599,7 +592,11 @@ void F1SpiritApp::title_draw(void)
 				} 
 			} 
 		}
-	} 
+	}
+
+	GLint vp[4];
+	glGetIntegerv(GL_VIEWPORT, vp);
+	glViewport(0, 0, SCREENW, SCREENH);
 
 	if (state_cycle > TITLE_TIMMER4 && state_cycle < TITLE_TIMMER4 + TITLE_TIMMER2*5) {
 		glEnable(GL_COLOR_MATERIAL);
@@ -618,10 +615,10 @@ void F1SpiritApp::title_draw(void)
 
 		glNormal3f(0.0, 0.0, 1.0);
 
-		GLfloat vtx[] = {MINX, 0, -3, 
-						 MINX, 480, -3, 
-						 MAXX, 480, -3,
-						 MAXX, 0, -3 };
+		GLfloat vtx[] = {MINX, MINY, -3, 
+						 MINX, MAXY, -3, 
+						 MAXX, MAXY, -3,
+						 MAXX, MINY, -3 };
 		glEnableClientState(GL_VERTEX_ARRAY);
 		glVertexPointer(3, GL_FLOAT, 0, vtx);
 		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
@@ -639,10 +636,10 @@ void F1SpiritApp::title_draw(void)
 
 		glNormal3f(0.0, 0.0, 1.0);
 
-		GLfloat vtx[] = {MINX, 0, -4, 
-						 MINX, 480, -4, 
-						 MAXX, 480, -4,
-						 MAXX, 0, -4 };
+		GLfloat vtx[] = {MINX, MINY, -4, 
+						 MINX, MAXY, -4, 
+						 MAXX, MAXY, -4,
+						 MAXX, MINY, -4 };
 		glEnableClientState(GL_VERTEX_ARRAY);
 		glVertexPointer(3, GL_FLOAT, 0, vtx);
 		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
@@ -660,15 +657,17 @@ void F1SpiritApp::title_draw(void)
 
 		glNormal3f(0.0, 0.0, 1.0);
 
-		GLfloat vtx[] = {MINX, 0, -4, 
-						 MINX, 480, -4, 
-						 MAXX, 480, -4,
-						 MAXX, 0, -4 };
+		GLfloat vtx[] = {MINX, MINY, -4, 
+						 MINX, MAXY, -4, 
+						 MAXX, MAXY, -4,
+						 MAXX, MINY, -4 };
 		glEnableClientState(GL_VERTEX_ARRAY);
 		glVertexPointer(3, GL_FLOAT, 0, vtx);
 		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 		glDisableClientState(GL_VERTEX_ARRAY);
 	} 
+
+	glViewport(vp[0], vp[1], vp[2], vp[3]);
 
 } 
 

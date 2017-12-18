@@ -124,8 +124,10 @@ SDL_Surface *initialization(int flags)
 		bpp = COLOUR_DEPTH;
 	} else {
 		bpp = info->vfmt->BitsPerPixel;
-	} 
+	}
 
+	desktopW = info->current_w;
+	desktopH = info->current_h;
 #ifdef F1SPIRIT_DEBUG_MESSAGES
 	output_debug_message("Setting OpenGL attributes\n");
 
@@ -150,11 +152,12 @@ SDL_Surface *initialization(int flags)
 
 #endif
 #ifdef HAVE_GLES
+	fullscreen = true;
 	flags = SDL_FULLSCREEN;
 #else
 	flags = SDL_OPENGL | flags;
 #endif
-	screen = SDL_SetVideoMode(SCREEN_X, SCREEN_Y, bpp, flags);
+	screen = SDL_SetVideoMode((fullscreen)?desktopW:SCREEN_X, (fullscreen)?desktopH:SCREEN_Y, bpp, flags);
 
 	if (screen == 0) {
 #ifdef F1SPIRIT_DEBUG_MESSAGES
@@ -164,13 +167,15 @@ SDL_Surface *initialization(int flags)
 		return 0;
 	} 
 #ifdef HAVE_GLES
-	EGL_Open(SCREEN_X, SCREEN_Y);
+	EGL_Open((fullscreen)?desktopW:SCREEN_X, (fullscreen)?desktopH:SCREEN_Y);
 #endif
 
 #ifdef F1SPIRIT_DEBUG_MESSAGES
 	output_debug_message("Video mode initialized\n");
 
 #endif
+
+	calcMinMax((fullscreen)?desktopW:SCREEN_X, (fullscreen)?desktopH:SCREEN_Y);
 
 	SDL_WM_SetCaption(application_name, 0);
 
@@ -300,10 +305,10 @@ int main(int argc, char** argv) {
 	if (fullscreen) {
 	#ifdef HAVE_GLES
 		EGL_Close();
-		screen_sfc = SDL_SetVideoMode(SCREEN_X, SCREEN_Y, COLOUR_DEPTH, (fullscreen ? SDL_FULLSCREEN : 0));
-		EGL_Open(SCREEN_X, SCREEN_Y);
+		screen_sfc = SDL_SetVideoMode((fullscreen)?desktopW:SCREEN_X, (fullscreen)?desktopH:SCREEN_Y, COLOUR_DEPTH, (fullscreen ? SDL_FULLSCREEN : 0));
+		EGL_Open((fullscreen)?desktopW:SCREEN_X, (fullscreen)?desktopH:SCREEN_Y);
 	#else
-		screen_sfc = SDL_SetVideoMode(SCREEN_X, SCREEN_Y, COLOUR_DEPTH, SDL_OPENGL | (fullscreen ? SDL_FULLSCREEN : 0));
+		screen_sfc = SDL_SetVideoMode((fullscreen)?desktopW:SCREEN_X, (fullscreen)?desktopH:SCREEN_Y, COLOUR_DEPTH, SDL_OPENGL | (fullscreen ? SDL_FULLSCREEN : 0));
 	#endif
 		SDL_WM_SetCaption(application_name, 0);
 		SDL_ShowCursor(SDL_DISABLE);
@@ -374,7 +379,9 @@ int main(int argc, char** argv) {
 							else
 								fullscreen = true;
 
-							screen_sfc = SDL_SetVideoMode(SCREEN_X, SCREEN_Y, COLOUR_DEPTH, SDL_OPENGL | (fullscreen ? SDL_FULLSCREEN : 0));
+							screen_sfc = SDL_SetVideoMode((fullscreen)?desktopW:SCREEN_X, (fullscreen)?desktopH:SCREEN_Y, COLOUR_DEPTH, SDL_OPENGL | (fullscreen ? SDL_FULLSCREEN : 0));
+
+							calcMinMax((fullscreen)?desktopW:SCREEN_X, (fullscreen)?desktopH:SCREEN_Y);
 
 							SDL_WM_SetCaption(application_name, 0);
 
@@ -408,12 +415,14 @@ int main(int argc, char** argv) {
 
 							#ifdef HAVE_GLES
 							EGL_Close();
-							screen_sfc = SDL_SetVideoMode(SCREEN_X, SCREEN_Y, COLOUR_DEPTH, SDL_OPENGL | (fullscreen ? SDL_FULLSCREEN : 0));
-							EGL_Open(SCREEN_X, SCREEN_Y);
+							screen_sfc = SDL_SetVideoMode((fullscreen)?desktopW:SCREEN_X, (fullscreen)?desktopH:SCREEN_Y, COLOUR_DEPTH, SDL_OPENGL | (fullscreen ? SDL_FULLSCREEN : 0));
+							EGL_Open((fullscreen)?desktopW:SCREEN_X, (fullscreen)?desktopH:SCREEN_Y);
 							#else
-							screen_sfc = SDL_SetVideoMode(SCREEN_X, SCREEN_Y, COLOUR_DEPTH, SDL_OPENGL | (fullscreen ? SDL_FULLSCREEN : 0));
+							screen_sfc = SDL_SetVideoMode((fullscreen)?desktopW:SCREEN_X, (fullscreen)?desktopH:SCREEN_Y, COLOUR_DEPTH, SDL_OPENGL | (fullscreen ? SDL_FULLSCREEN : 0));
 							#endif
 
+							calcMinMax((fullscreen)?desktopW:SCREEN_X, (fullscreen)?desktopH:SCREEN_Y);
+							
 							SDL_WM_SetCaption(application_name, 0);
 
 							SDL_ShowCursor(SDL_DISABLE);

@@ -206,18 +206,11 @@ void F1SpiritApp::endsequence_draw(void)
 
 			glNormal3f(0.0, 0.0, 1.0);
 
-			#ifdef PANDORA
-			#define MINX -80
-			#define MAXX 800-80
-			#else
-			#define MINX 0
-			#define MAXX 640
-			#endif
 			{
-				GLfloat vtx[] = {MINX, 0, 0, 
-								 MINX, 480, 0, 
-								 MAXX, 480, 0,
-								 MAXX, 0, 0 };
+				GLfloat vtx[] = {MINX, MINY, 0, 
+								 MINX, MAXY, 0, 
+								 MAXX, MAXY, 0,
+								 MAXX, MINY, 0 };
 				glEnableClientState(GL_VERTEX_ARRAY);
 				glVertexPointer(3, GL_FLOAT, 0, vtx);
 				glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
@@ -578,10 +571,10 @@ void F1SpiritApp::endsequence_draw(void)
 			glNormal3f(0.0, 0.0, 1.0);
 
 			{
-				GLfloat vtx[] = {MINX, 0, 0, 
-								 MINX, 480, 0, 
-								 MAXX, 480, 0,
-								 MAXX, 0, 0 };
+				GLfloat vtx[] = {MINX, MINY, 0, 
+								 MINX, MAXY, 0, 
+								 MAXX, MAXY, 0,
+								 MAXX, MINY, 0 };
 				glEnableClientState(GL_VERTEX_ARRAY);
 				glVertexPointer(3, GL_FLOAT, 0, vtx);
 				glDrawArrays(GL_TRIANGLE_FAN, 0, 4);

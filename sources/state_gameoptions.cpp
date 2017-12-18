@@ -850,18 +850,11 @@ void F1SpiritApp::gameoptions_draw(void)
 
 		glNormal3f(0.0, 0.0, 1.0);
 
-		#ifdef PANDORA
-		#define MINX -80
-		#define MAXX 800-80
-		#else
-		#define MINX 0
-		#define MAXX 640
-		#endif
 		{
-			GLfloat vtx[] = {MINX, 0, -4, 
-							 MINX, 480, -4, 
-							 MAXX, 480, -4,
-							 MAXX, 0, -4 };
+			GLfloat vtx[] = {MINX, MINY, -4, 
+							 MINX, MAXY, -4, 
+							 MAXX, MAXY, -4,
+							 MAXX, MINY, -4 };
 			glEnableClientState(GL_VERTEX_ARRAY);
 			glVertexPointer(3, GL_FLOAT, 0, vtx);
 			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);

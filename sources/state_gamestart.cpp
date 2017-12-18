@@ -97,18 +97,11 @@ void F1SpiritApp::gamestart_draw(void)
 
 		glNormal3f(0.0, 0.0, -1.0);
 
-		#ifdef PANDORA
-		#define MINX -80
-		#define MAXX 800-80
-		#else
-		#define MINX 0
-		#define MAXX 640
-		#endif
 		{
-			GLfloat vtx[] = {MINX, 0, -8, 
-							 MINX, 480, -8, 
-							 MAXX, 480, -8,
-							 MAXX, 0, -8 };
+			GLfloat vtx[] = {MINX, MINY, -8, 
+							 MINX, MAXY, -8, 
+							 MAXX, MAXY, -8,
+							 MAXX, MINY, -8 };
 			glEnableClientState(GL_VERTEX_ARRAY);
 			glVertexPointer(3, GL_FLOAT, 0, vtx);
 			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
@@ -128,10 +121,10 @@ void F1SpiritApp::gamestart_draw(void)
 		glNormal3f(0.0, 0.0, -1.0);
 
 		{
-			GLfloat vtx[] = {MINX, 0, -8, 
-							 MINX, 480, -8, 
-							 MAXX, 480, -8,
-							 MAXX, 0, -8 };
+			GLfloat vtx[] = {MINX, MINY, -8, 
+							 MINX, MAXY, -8, 
+							 MAXX, MAXY, -8,
+							 MAXX, MINY, -8 };
 			glEnableClientState(GL_VERTEX_ARRAY);
 			glVertexPointer(3, GL_FLOAT, 0, vtx);
 			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);

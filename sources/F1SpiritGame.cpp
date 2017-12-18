@@ -498,8 +498,8 @@ void F1SpiritGame::initialize_track(int ntrack)
 
 		sfc = IMG_Load("graphics/stock/tiles.png");
 		tiles.Add(new GLTile(sfc, 0, 64, 48, 48)); /* 1 */
-		tiles.Add(new GLTile(sfc, 0, 112, 48, 48));
-		tiles.Add(new GLTile(sfc, 0, 160, 64, 48));
+		tiles.Add(new GLTile(sfc, 0, 112, 48, 48-1));
+		tiles.Add(new GLTile(sfc, 0, 160, 64, 48-1));
 		SDL_FreeSurface(sfc);
 		n_wood_tiles = 3;
 		wood_tiles[0] = tiles[1];
@@ -3119,7 +3119,7 @@ void F1SpiritGame::draw(bool draw_scoreboard)
 		//  v->c_z=0.25;
 		{
 			glEnable( GL_SCISSOR_TEST );
-			glScissor(int(val[0] + v->vx*fx), int(val[1] + (480 - (v->vy + v->vdy))*fy), int(v->vdx*fx), int(v->vdy*fy));
+			glScissor(int((val[0] + v->vx*fx)), int((val[1] + (480 - (v->vy + v->vdy))*fy)), int(v->vdx*fx), int(v->vdy*fy));
 		}
 
 		glPushMatrix();
@@ -3133,9 +3133,9 @@ void F1SpiritGame::draw(bool draw_scoreboard)
 				// camera type 2
 				glTranslatef(float(v->vx + v->vdx / 2), float(v->vy + 3*(v->vdy / 4)), 0);
 
-				vp.y = -v->vdy / 2;
+				vp.y = (-v->vdy / 2);
 				vp.h = v->vdy;
-				vp.x = -v->vdx / 2;
+				vp.x = (-v->vdx / 2);
 				vp.w = v->vdx;
 			}
 
@@ -3654,18 +3654,10 @@ void F1SpiritGame::draw(bool draw_scoreboard)
 
 		glNormal3f(0.0, 0.0, 1.0);
 
-		#ifdef PANDORA
-		#define MINX -80
-		#define MAXX 800-80
-		#else
-		#define MINX 0
-		#define MAXX 640
-		#endif
-
-		GLfloat vtx[] = {MINX, 0, -4, 
-						 MINX, 480, -4, 
-						 MAXX, 480, -4,
-						 MAXX, 0, -4 };
+		GLfloat vtx[] = {MINX, MINY, -4, 
+						 MINX, MAXY, -4, 
+						 MAXX, MAXY, -4,
+						 MAXX, MINY, -4 };
 		glEnableClientState(GL_VERTEX_ARRAY);
 		glVertexPointer(3, GL_FLOAT, 0, vtx);
 		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
@@ -3688,10 +3680,10 @@ void F1SpiritGame::draw(bool draw_scoreboard)
 
 		glNormal3f(0.0, 0.0, 1.0);
 
-		GLfloat vtx[] = {MINX, 0, -4, 
-						 MINX, 480, -4, 
-						 MAXX, 480, -4,
-						 MAXX, 0, -4 };
+		GLfloat vtx[] = {MINX, MINY, -4, 
+						 MINX, MAXY, -4, 
+						 MAXX, MAXY, -4,
+						 MAXX, MINY, -4 };
 		glEnableClientState(GL_VERTEX_ARRAY);
 		glVertexPointer(3, GL_FLOAT, 0, vtx);
 		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);

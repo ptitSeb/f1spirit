@@ -495,7 +495,7 @@ void F1SpiritGame::initialize_track(int ntrack)
 		} 
 
 		sfc = IMG_Load("graphics/stock/tiles.png");
-		tiles.Add(new GLTile(sfc, 0, 64, 48, 48)); /* 1 */
+		tiles.Add(new GLTile(sfc, 0, 64, 48, 48-1)); /* 1 */
 		tiles.Add(new GLTile(sfc, 0, 112, 48, 48-1));
 		tiles.Add(new GLTile(sfc, 0, 160, 64, 48-1));
 		SDL_FreeSurface(sfc);
@@ -514,17 +514,17 @@ void F1SpiritGame::initialize_track(int ntrack)
 		tiles.Add(new GLTile(sfc, 0, 48, 32, 48));
 		SDL_FreeSurface(sfc);
 		sfc = IMG_Load("graphics/stock/fences.png");
-		tiles.Add(new GLTile(sfc, 0, 0, 64, 64)); /* 10 */
-		tiles.Add(new GLTile(sfc, 0, 64, 64, 64));
-		tiles.Add(new GLTile(sfc, 0, 128, 64, 64));
-		tiles.Add(new GLTile(sfc, 0, 192, 64, 64));
-		tiles.Add(new GLTile(sfc, 0, 256, 64, 64));
-		tiles.Add(new GLTile(sfc, 0, 320, 64, 64));
-		tiles.Add(new GLTile(sfc, 0, 388, 64, 64));
-		tiles.Add(new GLTile(sfc, 64, 64, 64, 64));
-		tiles.Add(new GLTile(sfc, 64, 128, 64, 64));
-		tiles.Add(new GLTile(sfc, 64, 192, 64, 64));
-		tiles.Add(new GLTile(sfc, 64, 256, 64, 128));
+		tiles.Add(new GLTile(sfc, 0, 0, 64, 64-1)); /* 10 */
+		tiles.Add(new GLTile(sfc, 0, 64, 64, 64-1));
+		tiles.Add(new GLTile(sfc, 0, 128, 64, 64-1));
+		tiles.Add(new GLTile(sfc, 0, 192, 64, 64-1));
+		tiles.Add(new GLTile(sfc, 0, 256, 64, 64-1));
+		tiles.Add(new GLTile(sfc, 0, 320, 64, 64-1));
+		tiles.Add(new GLTile(sfc, 0, 388, 64, 64-1));
+		tiles.Add(new GLTile(sfc, 64, 64, 64, 64-1));
+		tiles.Add(new GLTile(sfc, 64, 128, 64, 64-1));
+		tiles.Add(new GLTile(sfc, 64, 192, 64, 64-1));
+		tiles.Add(new GLTile(sfc, 64, 256, 64, 128-1));
 		SDL_FreeSurface(sfc);
 
 		sfc = IMG_Load("graphics/stock/crowd.png");

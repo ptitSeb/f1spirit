@@ -7,14 +7,9 @@
 #include "stdlib.h"
 #include "string.h"
 
-#ifdef HAVE_GLES
-#include <GLES/gl.h>
-//#include <GLES/glu.h>
-#else
-#include "GL/gl.h"
-#include "GL/glu.h"
-#endif
-#include "SDL.h"
+#include "3DStuff.h"
+
+#include <SDL.h>
 
 #include "List.h"
 #include "Vector.h"
@@ -37,7 +32,6 @@
 #define OPTIMIZE_DX  64
 #define OPTIMIZE_DY  64
 
-#ifdef HAVE_GLES
 #define glPushMatrix 	glesPushMatrix
 #define glPopMatrix 	glesPopMatrix
 #define glScalef		glesScalef
@@ -52,12 +46,11 @@
 #define glEnd			glesEnd
 #define glBindTexture	glesBindTexture
 
-#define GL_QUADS 		0
+#ifndef GL_QUADS
+#define GL_QUADS 		7
+#endif
 
 extern bool special;
-#else
-#define special false
-#endif
 
 CRoadPiece::CRoadPiece(void)
 {
@@ -89,12 +82,6 @@ CRoadPiece::CRoadPiece(void)
 	#ifdef __ARM_NEON__
 	path_xy= 0;
 	#endif
-/*	#ifdef HAVE_GLES
-	indices=0;
-	vtx=0;
-	tex1=0;
-	#endif*/
-
 	r_x1 = r_y1 = 0;
 	r_x2 = r_y2 = 0;
 	r_z = 0;
@@ -139,12 +126,6 @@ CRoadPiece::CRoadPiece(float x, float y, float z)
 	#ifdef __ARM_NEON__
 	path_xy= 0;
 	#endif
-/*	#ifdef HAVE_GLES
-	indices=0;
-	vtx=0;
-	tex1=0;
-	#endif*/
-
 	r_x1 = r_y1 = 0;
 	r_x2 = r_y2 = 0;
 	r_inc = 0;
@@ -186,12 +167,6 @@ CRoadPiece::CRoadPiece(FILE *fp)
 	#ifdef __ARM_NEON__
 	path_xy= 0;
 	#endif
-/*	#ifdef HAVE_GLES
-	indices=0;
-	vtx=0;
-	tex1=0;
-	#endif*/
-
 	r_x1 = r_y1 = 0;
 	r_x2 = r_y2 = 0;
 	r_inc = 0;
@@ -227,17 +202,6 @@ CRoadPiece::~CRoadPiece()
 		delete []path_xy;
 	path_xy= 0;
 	#endif
-/*	#ifdef HAVE_GLES
-	if (indices)
-		delete []indices;
-	indices=0;
-	if (vtx)
-		delete []vtx;
-	vtx=0;
-	if (tex1)
-		delete []tex1;
-	tex1=0;
-	#endif*/
 	path_points = 0;
 	path_x = 0;
 	path_y = 0;
@@ -297,12 +261,6 @@ void CRoadPiece::force_internal_draw(void)
 	if (path_xy)
 		delete []path_xy;
 	#endif
-/*	#ifdef HAVE_GLES
-	if (indices) delete[] indices;
-	if (vtx) delete[] vtx;
-	if (tex1) delete[] tex1;
-	#endif*/
-	
 	r_x1 = r_y1 = 0;
 	r_x2 = r_y2 = 0;
 	r_z = 0;
@@ -530,10 +488,8 @@ void CRoadPiece::draw(float offs, int n_textures, GLuint *textures, int n_ltextu
 		pos = offs;
 		n_lines = float(nlines2);
 		r_width = w1;
-		#ifdef HAVE_GLES
 		glBindTexture(GL_TEXTURE_2D, line_texture);
 		glBegin(GL_QUADS);
-		#endif
 		if (n_lines > 0) {
 			for (i = 0;i < steps;i++, n_lines += n_lines_inc, r_width += r_width_inc) {
 
@@ -576,10 +532,6 @@ void CRoadPiece::draw(float offs, int n_textures, GLuint *textures, int n_ltextu
 						next_lx2 = r_x1[i + 1] * (line_start2 + line_width2) + r_x2[i + 1] * (1.0F - (line_start2 + line_width2));
 						next_ly2 = r_y1[i + 1] * (line_start2 + line_width2) + r_y2[i + 1] * (1.0F - (line_start2 + line_width2));
 
-						#ifndef HAVE_GLES
-						glBindTexture(GL_TEXTURE_2D, line_texture);
-						glBegin(GL_QUADS);
-						#endif
 						glTexCoord2f(0, -pos / 128.0F);
 						glVertex3f(lx1, ly1, r_z[i]);
 
@@ -591,9 +543,6 @@ void CRoadPiece::draw(float offs, int n_textures, GLuint *textures, int n_ltextu
 
 						glTexCoord2f(0, -(pos + inc) / 128.0F);
 						glVertex3f(next_lx1, next_ly1, r_z[i + 1]);
-						#ifndef HAVE_GLES
-						glEnd();
-						#endif
 					} 
 					line_start1 += line_inc1;
 					line_start2 += line_inc2;
@@ -601,9 +550,7 @@ void CRoadPiece::draw(float offs, int n_textures, GLuint *textures, int n_ltextu
 				pos += inc;
 			} 
 		} 
-		#ifdef HAVE_GLES
 		glEnd();
-		#endif
 
 
 		if (!special) 
@@ -706,13 +653,6 @@ void CRoadPiece::draw_linear(void)
 	r_y2 = new float[steps + 1];
 	r_z = new float[steps + 1];
 	r_inc = new float[steps + 1];
-/*
-	#ifdef HAVE_GLES
-	indices= new GLushort[(steps+1)*6*2];
-	vtx=new GLfloat[(steps+1)*4*3*2];
-	tex1=new GLfloat[(steps+1)*4*2*2];;
-	#endif
-*/	
 
 	if (lchicane1 > 0 || lchicane2 > 0 || rchicane1 > 0 || rchicane2 > 0) {
 		r_cx1 = new float[steps + 1];
@@ -900,7 +840,7 @@ void CRoadPiece::draw_circular_adapted(void)
 
 	center[1] /= ndata;
 
-	/* calcular el ángulo inicial, el ángulo final y la dirección: */
+	/* calcular el ï¿½ngulo inicial, el ï¿½ngulo final y la direcciï¿½n: */
 	float ta1 = atan2f(y1 - center[1], x1 - center[0]);
 	float ta2 = atan2f(y2 - center[1], x2 - center[0]);
 	float t_a_inc;
@@ -986,12 +926,7 @@ void CRoadPiece::draw_circular_adapted(void)
 	r_y2 = new float[steps + 1];
 	r_z = new float[steps + 1];
 	r_inc = new float[steps + 1];
-/*	#ifdef HAVE_GLES
-	indices= new GLushort[(steps+1)*6*2];
-	vtx=new GLfloat[(steps+1)*4*3*2];
-	tex1=new GLfloat[(steps+1)*4*2*2];;
-	#endif
-*/
+
 	if (lchicane2 > 0 || lchicane1 > 0 || rchicane2 > 0 || rchicane1 > 0) {
 		r_cx1 = new float[steps + 1];
 		r_cy1 = new float[steps + 1];

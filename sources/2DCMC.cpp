@@ -4,14 +4,8 @@
 
 #include "math.h"
 
-#ifdef HAVE_GLES
-#include <GLES/gl.h>
-//#include <GLES/glu.h>
-#else
-#include "GL/gl.h"
-#include "GL/glu.h"
-#endif
-#include "SDL.h"
+#include "3DStuff.h"
+#include <SDL.h>
 
 #include "stdlib.h"
 #include "auxiliar.h"
@@ -59,7 +53,6 @@ void C2DCMC::draw(float r, float g, float b, float a)
 	if (!empty) {
 		glColor4f(r, g, b, a);
 
-		#ifdef HAVE_GLES
 		GLfloat vtx[] = {x[0], y[0], x[1], y[0], 
 						 x[1], y[0], x[1], y[1], 
 						 x[1], y[1], x[0], y[1],
@@ -70,31 +63,6 @@ void C2DCMC::draw(float r, float g, float b, float a)
 		glVertexPointer(2, GL_FLOAT, 0, vtx);
 		glDrawArrays(GL_LINES, 0, 12);
 		glDisableClientState(GL_VERTEX_ARRAY);
-		#else
-		/* BBOX: */
-		glBegin(GL_LINES);
-		glVertex3f(x[0], y[0], 0);
-		glVertex3f(x[1], y[0], 0);
-
-		glVertex3f(x[1], y[0], 0);
-		glVertex3f(x[1], y[1], 0);
-
-		glVertex3f(x[1], y[1], 0);
-		glVertex3f(x[0], y[1], 0);
-
-		glVertex3f(x[0], y[1], 0);
-		glVertex3f(x[0], y[0], 0);
-		glEnd();
-
-		/* CENTER: */
-		glBegin(GL_LINES);
-		glVertex3f( -2, -2, 0);
-		glVertex3f(2, 2, 0);
-
-		glVertex3f(2, -2, 0);
-		glVertex3f( -2, 2, 0);
-		glEnd();
-		#endif
 
 		/* QUICK COLLISION CIRCLE: */
 		/*

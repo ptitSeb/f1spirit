@@ -2,24 +2,17 @@
 #include "windows.h"
 #endif
 
-#include "stdio.h"
-#include "math.h"
-#include "stdlib.h"
-#include "string.h"
+#include <stdio.h>
+#include <math.h>
+#include <stdlib.h>
+#include <string.h>
 
-#ifdef HAVE_GLES
-#include <GLES/gl.h>
-//#include <GLES/glu.h>
-#else
-#include "GL/gl.h"
-#include "GL/glu.h"
-#endif
-#include "SDL.h"
-#include "SDL_mixer.h"
-#include "SDL_image.h"
-#include "SDL_net.h"
+#include "3DStuff.h"
 
-#include "stdlib.h"
+#include <SDL.h>
+#include <SDL_mixer.h>
+#include <SDL_image.h>
+#include <SDL_net.h>
 
 #include "F1Spirit.h"
 #include "auxiliar.h"

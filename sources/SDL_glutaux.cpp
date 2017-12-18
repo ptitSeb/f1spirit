@@ -2,16 +2,14 @@
 #include "windows.h"
 #endif
 
+#include "3DStuff.h"
 #ifdef HAVE_GLES
-#include <GLES/gl.h>
 #define GL_RGBA8 	GL_RGBA
 #define GL_CLAMP	GL_CLAMP_TO_EDGE
-#else
-#include <GL/gl.h>
 #endif
 
-#include "SDL.h"
-#include "SDL_image.h"
+#include <SDL.h>
+#include <SDL_image.h>
 
 #include "stdio.h"
 #include "math.h"
@@ -28,9 +26,32 @@
 #define USE_GLM 1
 
 #ifdef USE_GLM
+#define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #endif
+
+#define MAX_VTX		8192
+GLfloat	vtx[MAX_VTX*4*3];
+GLfloat tex1[MAX_VTX*4*2];
+GLushort indices[MAX_VTX*6];
+int idx=0;
+int ids=0;
+GLuint old_tex=0;
+bool special=false;
+
+#define CNT2 16
+GLfloat* vtx2[CNT2];	// vtx arrays
+GLfloat* tex2[CNT2];	// tex arrays
+GLfloat* col2[CNT2];	// tex arrays
+GLushort* ind2[CNT2];	// indices
+GLushort idx2[CNT2];
+GLuint 	 gltex2[CNT2];	// associated texture (0 for not used)
+GLfloat  cur_col[4];	// current color
+GLfloat cur_normal[3];	// current normal
+int ids2[CNT2];
+int cnt_active;
+bool cnt_inited = false;
 
 int nearest_2pow(int n)
 {
@@ -64,17 +85,14 @@ GLuint createTexture(SDL_Surface *sfc, float *tx, float *ty)
 
 		//glGenTextures(1, &tname);
 		if (!Find_Texture(sfc2, sfc->w, sfc->h, false, false, &tname))  {
-			#ifdef HAVE_GLES
 			glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-			#else
-			glPixelStorei(GL_UNPACK_ALIGNMENT, tname);
-			#endif
 			glBindTexture(GL_TEXTURE_2D, tname);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, szx, szy, 0, GL_RGBA, GL_UNSIGNED_BYTE, sfc2->pixels);
+			old_tex = 0;
 		}
 		SDL_FreeSurface(sfc2);
 	} else {
@@ -103,17 +121,14 @@ GLuint createTextureClamp(SDL_Surface *sfc, float *tx, float *ty)
 
 //		glGenTextures(1, &tname);
 		if (!Find_Texture(sfc2, sfc->w, sfc->h, true, false, &tname))  {
-			#ifdef HAVE_GLES
 			glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-			#else
-			glPixelStorei(GL_UNPACK_ALIGNMENT, tname);
-			#endif
 			glBindTexture(GL_TEXTURE_2D, tname);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, szx, szy, 0, GL_RGBA, GL_UNSIGNED_BYTE, sfc2->pixels);
+			old_tex = 0;
 		}
 		SDL_FreeSurface(sfc2);
 	} else {
@@ -142,17 +157,14 @@ GLuint createTextureSmooth(SDL_Surface *sfc, float *tx, float *ty)
 
 //		glGenTextures(1, &tname);
 		if (!Find_Texture(sfc2, sfc->w, sfc->h, false, true, &tname))  {
-			#ifdef HAVE_GLES
 			glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-			#else
-			glPixelStorei(GL_UNPACK_ALIGNMENT, tname);
-			#endif
 			glBindTexture(GL_TEXTURE_2D, tname);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, szx, szy, 0, GL_RGBA, GL_UNSIGNED_BYTE, sfc2->pixels);
+			old_tex = 0;
 		}
 		SDL_FreeSurface(sfc2);
 	} else {
@@ -181,17 +193,14 @@ GLuint createTextureClampSmooth(SDL_Surface *sfc, float *tx, float *ty)
 
 //		glGenTextures(1, &tname);
 		if (!Find_Texture(sfc2, sfc->w, sfc->h, true, true, &tname))  {
-			#ifdef HAVE_GLES
 			glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-			#else
-			glPixelStorei(GL_UNPACK_ALIGNMENT, tname);
-			#endif
 			glBindTexture(GL_TEXTURE_2D, tname);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, szx, szy, 0, GL_RGBA, GL_UNSIGNED_BYTE, sfc2->pixels);
+			old_tex = 0;
 		}
 		SDL_FreeSurface(sfc2);
 	} else {
@@ -212,11 +221,7 @@ GLuint createTextureFromScreen(int x, int y, int dx, int dy, float *tx, float *t
 	*ty = (dy) / float(szy);
 
 	glGenTextures(1, &tname);
-	#ifdef HAVE_GLES
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-	#else
-	glPixelStorei(GL_UNPACK_ALIGNMENT, tname);
-	#endif
 	glBindTexture(GL_TEXTURE_2D, tname);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -224,13 +229,13 @@ GLuint createTextureFromScreen(int x, int y, int dx, int dy, float *tx, float *t
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
 	glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, x, y, dx, dy);
+	old_tex = 0;
 
 	return tname;
 }
 
 void gl_line(int x1, int y1, int x2, int y2, float r, float g, float b)
 {
-	#ifdef HAVE_GLES
 	glColor4f(r, g, b, 1.0f);
 	GLfloat vtx[] = {float(x1), float(y1), 
 					 float(x2), float(y2) };
@@ -238,13 +243,6 @@ void gl_line(int x1, int y1, int x2, int y2, float r, float g, float b)
 	glVertexPointer(2, GL_FLOAT, 0, vtx);
 	glDrawArrays(GL_LINES, 0, 2);
 	glDisableClientState(GL_VERTEX_ARRAY);
-	#else
-	glColor3f(r, g, b);
-	glBegin(GL_LINES);
-	glVertex3f(float(x1), float(y1), 0);
-	glVertex3f(float(x2), float(y2), 0);
-	glEnd();
-	#endif
 }
 
 
@@ -312,13 +310,13 @@ bool Find_Texture(SDL_Surface *sfc, int w, int h, bool clamp, bool smooth, GLuin
 {
 	// Calc the CRC
 	int buff[3];
-	buff[0]=(clamp)?1:0+(smooth)?2:0;
+	buff[0]=((clamp)?1:0)+((smooth)?2:0);
 	buff[1]=w;
 	buff[2]=h;
 	
 	unsigned int crc, flags;
 	
-	flags = CRC32(0, (void*)buff, 3*sizeof(int));
+	flags = buff[2]|(buff[1]<<12)|(buff[2]<<24);//CRC32(0, (void*)buff, 3*sizeof(int));
 	crc = CRC32(0, sfc->pixels, sfc->pitch*sfc->h);
 	
 	// Search it
@@ -380,28 +378,6 @@ void TM_glDeleteTextures(GLuint n, GLuint *first)
 		texture_max--; i--;
 	}
 }
-
-#define MAX_VTX		8192
-GLfloat	vtx[MAX_VTX*4*3];
-GLfloat tex1[MAX_VTX*4*2];
-GLushort indices[MAX_VTX*6];
-int idx=0;
-int ids=0;
-GLuint old_tex=0;
-bool special=false;
-
-#define CNT2 16
-GLfloat* vtx2[CNT2];	// vtx arrays
-GLfloat* tex2[CNT2];	// tex arrays
-GLfloat* col2[CNT2];	// tex arrays
-GLushort* ind2[CNT2];	// indices
-GLushort idx2[CNT2];
-GLuint 	 gltex2[CNT2];	// associated texture (0 for not used)
-GLfloat  cur_col[4];	// current color
-GLfloat cur_normal[3];	// current normal
-int ids2[CNT2];
-int cnt_active;
-bool cnt_inited = false;
 
 void glesDoDraw();
 void apply(float x, float y, float z, float *vec );
@@ -590,7 +566,7 @@ void glesRotatef(GLfloat angle, GLfloat x, GLfloat y, GLfloat z)
 {
 	if (special) {
 	#ifdef USE_GLM
-		m=glm::rotate(m, angle, glm::vec3(x, y, z));
+		m=glm::rotate(m, angle*3.1415926535f/180.0f, glm::vec3(x, y, z));
 		return;
 	#else
 		glesFlushSpecial();

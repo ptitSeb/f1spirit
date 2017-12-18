@@ -6,16 +6,12 @@
 #include "stdlib.h"
 #include "string.h"
 
-#ifdef HAVE_GLES
-#include <GLES/gl.h>
-//#include <GLES/glu.h>
-#else
-#include "GL/gl.h"
-#endif
-#include "SDL.h"
-#include "SDL_image.h"
-#include "SDL_mixer.h"
-#include "SDL_net.h"
+#include "3DStuff.h"
+
+#include <SDL.h>
+#include <SDL_image.h>
+#include <SDL_mixer.h>
+#include <SDL_net.h>
 
 #include "F1Spirit.h"
 #include "sound.h"
@@ -832,7 +828,7 @@ void CCar::draw_mini(float a, float x, float y, float z, float angle, float zoom
 
 bool CCar::cycle(bool kaccelerate, bool kbrake, int kgear, int kturn, CRoadPiece *current_piece, CTrack *track, List<RacingCCar> *cars, List<F1S_SFX> *sfx, int sfx_volume, bool check_trackcollision, int terrain, float position, List<RacingCCar> **car_grid, int car_grid_sx, int car_grid_sy)
 {
-	/* Modelo físico: */
+	/* Modelo fï¿½sico: */
 	float old_x = tcar->x;
 	float old_y = tcar->y;
 	float old_z = tcar->z;

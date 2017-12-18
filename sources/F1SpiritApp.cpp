@@ -12,14 +12,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef HAVE_GLES
-#include <GLES/gl.h>
-////#include <GLES/glu.h>
-#include "eglport.h"
-#else
-#include <GL/gl.h>
-#include <GL/glu.h>
-#endif
+#include "3DStuff.h"
+
 #include <SDL.h>
 #include <SDL_image.h>
 #include <SDL_mixer.h>
@@ -74,14 +68,17 @@ extern char console_msg[80];
 
 extern char *f1spirit_replay_version;
 
-#ifdef HAVE_GLES
 void gluPerspective( float fovY, float aspect, float zNear, float zFar )
 {
  const float pi = 3.1415926535897932384626433832795;
  float fW, fH;
  fH = tanf( fovY / 360 * pi ) * zNear;
  fW = fH * aspect;
+#ifdef HAVE_GLES
  glFrustumf( -fW, fW, -fH, fH, zNear, zFar );
+#else
+ glFrustum( -fW, fW, -fH, fH, zNear, zFar );
+#endif
 }
 
 //LookAt from https://forums.khronos.org/showthread.php/4991-The-Solution-for-gluLookAt()-Function!!!!
@@ -141,7 +138,6 @@ void gluLookAt(float eyeX, float eyeY, float eyeZ, float lookAtX, float lookAtY,
  glMultMatrixf(M);
  glTranslatef (-eyeX, -eyeY, -eyeZ); 
 }
-#endif
 
 F1SpiritApp::F1SpiritApp()
 {
@@ -150,9 +146,8 @@ F1SpiritApp::F1SpiritApp()
 	
 	CRC_BuildTable();
 	Init_TexManager();
-	#ifdef HAVE_GLES
+
 	glesSpecial(false);
-	#endif
 
 	load_configuration("f1spirit.cfg");
 

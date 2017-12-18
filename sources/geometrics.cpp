@@ -1,6 +1,6 @@
-#include "stdio.h"
-#include "math.h"
-#include "string.h"
+#include <stdio.h>
+#include <math.h>
+#include <string.h>
 
 #include "Vector.h"
 
@@ -330,7 +330,7 @@ bool gauss_solve_d(double *m, double *ctnt, double *s, int neq)
 		order[i] = -1;
 
 	for (i = 0;i < neq;i++) {
-		/* Buscar una ecuación con coeficiente de la variable i diferente de 0: */
+		/* Buscar una ecuaciï¿½n con coeficiente de la variable i diferente de 0: */
 		for (j = 0, found = false, tmp = 0;j < neq;j++) {
 			if (fabs(m[i + j*neq]) > tmp) {
 				found = true;
@@ -429,7 +429,7 @@ double distancia_a_recta(Vector p, Vector pr, Vector vr)
 	/* Buscamos el plano que tiene como vector normal 'vr' y pasa por 'p': */
 	/* x*vr.x + y*vr.y + z*vr.z - (p*vr) = 0 */
 
-	/* Buscamos el punto de colisión entre la recta y el plano anterior: */
+	/* Buscamos el punto de colisiï¿½n entre la recta y el plano anterior: */
 	Vector col_point;
 	double lambda;
 	double tmp1, tmp2;

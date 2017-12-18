@@ -1,5 +1,5 @@
-#include "math.h"
-#include "stdio.h"
+#include <math.h>
+#include <stdio.h>
 #include "Vector.h"
 
 #ifdef KITSCHY_DEBUG_MEMORY

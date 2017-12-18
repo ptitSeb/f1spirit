@@ -2,16 +2,16 @@
 #include "windows.h"
 #endif
 
-#include "math.h"
-#include "stdlib.h"
-#include "string.h"
+#include <math.h>
+#include <stdlib.h>
+#include <string.h>
 
-#include "GL/gl.h"
-#include "GL/glu.h"
-#include "SDL.h"
-#include "SDL_image.h"
-#include "SDL_mixer.h"
-#include "SDL_net.h"
+#include "3DStuff.h"
+
+#include <SDL.h>
+#include <SDL_image.h>
+#include <SDL_mixer.h>
+#include <SDL_net.h>
 
 #include "F1Spirit.h"
 #include "sound.h"

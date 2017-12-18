@@ -4,22 +4,17 @@
 #include <dirent.h>
 #endif
 
-#include "stdio.h"
-#include "math.h"
-#include "stdlib.h"
-#include "string.h"
+#include <stdio.h>
+#include <math.h>
+#include <stdlib.h>
+#include <string.h>
 
-#ifdef HAVE_GLES
-#include <GLES/gl.h>
-//#include <GLES/glu.h>
-#else
-#include "GL/gl.h"
-#include "GL/glu.h"
-#endif
-#include "SDL.h"
-#include "SDL_mixer.h"
-#include "SDL_image.h"
-#include "SDL_net.h"
+#include "3DStuff.h"
+
+#include <SDL.h>
+#include <SDL_mixer.h>
+#include <SDL_image.h>
+#include <SDL_net.h>
 
 #include "F1Spirit.h"
 #include "sound.h"
@@ -862,7 +857,6 @@ void F1SpiritApp::gameoptions_draw(void)
 		#define MINX 0
 		#define MAXX 640
 		#endif
-		#ifdef HAVE_GLES
 		{
 			GLfloat vtx[] = {MINX, 0, -4, 
 							 MINX, 480, -4, 
@@ -873,19 +867,6 @@ void F1SpiritApp::gameoptions_draw(void)
 			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 			glDisableClientState(GL_VERTEX_ARRAY);
 		}
-		#else
-		glBegin(GL_QUADS);
-
-		glVertex3f(0, 0, -4);
-
-		glVertex3f(0, 480, -4);
-
-		glVertex3f(640, 480, -4);
-
-		glVertex3f(640, 0, -4);
-
-		glEnd();
-		#endif
 	}
 
 

@@ -24,7 +24,6 @@ void Init_TexManager();
 bool Find_Texture(SDL_Surface *sfc, int w, int h, bool clamp, bool smooth, GLuint *ID);
 void TM_glDeleteTextures(GLuint n, GLuint *first);
 
-#ifdef HAVE_GLES
 /* GLES drawing */
 void glesSpecial(bool what);
 void glesBindTexture(GLenum what, GLuint texid);
@@ -39,6 +38,5 @@ void glesRotatef(GLfloat angle, GLfloat x, GLfloat y, GLfloat z);
 void glesScalef(GLfloat x, GLfloat y, GLfloat z);
 void glesPushMatrix();
 void glesPopMatrix();
-#endif
 
 #endif

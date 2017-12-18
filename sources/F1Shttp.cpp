@@ -11,8 +11,8 @@
 
 #include "F1Shttp.h"
 
-#include "SDL.h"
-#include "SDL_thread.h"
+#include <SDL.h>
+#include <SDL_thread.h>
 
 
 int n_servers = 2;

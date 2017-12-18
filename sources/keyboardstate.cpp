@@ -1,10 +1,10 @@
-#include "assert.h"
+#include <assert.h>
 
-#include "string.h"
-#include "math.h"
-#include "stdlib.h"
+#include <string.h>
+#include <math.h>
+#include <stdlib.h>
 
-#include "SDL.h"
+#include <SDL.h>
 
 #include "List.h"
 

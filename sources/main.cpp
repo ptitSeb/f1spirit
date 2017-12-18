@@ -4,21 +4,15 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "math.h"
-#include "string.h"
+#include <math.h>
+#include <string.h>
 
-#ifdef HAVE_GLES
-#include <GLES/gl.h>
-//#include <GLES/glu.h>
-#include "eglport.h"
-#else
-#include "GL/gl.h"
-#include "GL/glu.h"
-#endif
-#include "SDL.h"
-#include "SDL_mixer.h"
-#include "SDL_image.h"
-#include "SDL_net.h"
+#include "3DStuff.h"
+
+#include <SDL.h>
+#include <SDL_mixer.h>
+#include <SDL_image.h>
+#include <SDL_net.h>
 
 #include "F1Spirit.h"
 #include "sound.h"
@@ -138,11 +132,11 @@ SDL_Surface *initialization(int flags)
 #endif
 #ifndef HAVE_GLES
 	SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
-
 	SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
-
 	SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
-
+	SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
+	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 #endif
 #ifdef F1SPIRIT_DEBUG_MESSAGES
@@ -301,7 +295,7 @@ int main(int argc, char** argv) {
 
 	game = new F1SpiritApp();
 
-	#ifndef HAVE_GLES
+	#if 0//ndef HAVE_GLES
 	// why recreating the context ???
 	if (fullscreen) {
 	#ifdef HAVE_GLES
@@ -428,11 +422,10 @@ int main(int argc, char** argv) {
 
 							#ifndef HAVE_GLES
 							SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
-
 							SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
-
 							SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
-
+							SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+							SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 							SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 							#endif
 							#endif

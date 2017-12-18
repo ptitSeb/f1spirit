@@ -2,15 +2,10 @@
 #include "windows.h"
 #endif
 
-#ifdef HAVE_GLES
-#include <GLES/gl.h>
-//#include <GLES/glu.h>
-#else
-#include "GL/gl.h"
-#include "GL/glu.h"
-#endif
-#include "SDL.h"
-#include "SDL_image.h"
+#include "3DStuff.h"
+
+#include <SDL.h>
+#include <SDL_image.h>
 
 #include "auxiliar.h"
 #include "GLTile.h"
@@ -45,14 +40,12 @@ void GLTile::f1_draw_effect1(int ax, int ay, int az, int h_tiles, int v_tiles, i
 
 	part_y = float(g_dy / v_tiles);
 
-	#ifdef HAVE_GLES
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 	GLfloat tex1[2*4];
 	GLfloat vtx[2*4];
 	glVertexPointer(2, GL_FLOAT, 0, vtx);
 	glTexCoordPointer(2, GL_FLOAT, 0, tex1);
-	#endif
 
 	for (i = 0;i < v_tiles;i++) {
 		for (j = 0;j < h_tiles;j++) {
@@ -76,7 +69,6 @@ void GLTile::f1_draw_effect1(int ax, int ay, int az, int h_tiles, int v_tiles, i
 				glColor4f(r, g, b, 1);
 				glNormal3f(0.0, 0.0, -1.0);
 
-				#ifdef HAVE_GLES
 				vtx[0*2+0] = -part_x / 2.0F; vtx[0*2+1] = -part_y / 2.0F;
 				vtx[1*2+0] = -part_x / 2.0F; vtx[1*2+1] = part_y / 2.0F;
 				vtx[2*2+0] = part_x / 2.0F; vtx[2*2+1] = part_y / 2.0F;
@@ -84,15 +76,6 @@ void GLTile::f1_draw_effect1(int ax, int ay, int az, int h_tiles, int v_tiles, i
 				glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 				glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 				glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-				#else
-				glBegin(GL_QUADS);
-				glVertex3f( -part_x / 2.0F, -part_y / 2.0F, 0);
-				glVertex3f( -part_x / 2.0F, part_y / 2.0F, 0);
-				glVertex3f(part_x / 2.0F, part_y / 2.0F, 0);
-				glVertex3f(part_x / 2.0F, -part_y / 2.0F, 0);
-				glEnd();
-				glDisable(GL_TEXTURE_2D);
-				#endif
 
 
 			} else {
@@ -104,7 +87,6 @@ void GLTile::f1_draw_effect1(int ax, int ay, int az, int h_tiles, int v_tiles, i
 				glColor4f(1, 1, 1, 1);
 				glNormal3f(0.0, 0.0, 1.0);
 
-				#ifdef HAVE_GLES
 				tex1[0*2+0] = t_part_x*j; 		tex1[0*2+1] = t_part_y*i;
 				vtx[0*2+0] = -part_x / 2.0F; 	vtx[0*2+1] = -part_y / 2.0F;
 				
@@ -118,22 +100,6 @@ void GLTile::f1_draw_effect1(int ax, int ay, int az, int h_tiles, int v_tiles, i
 				vtx[3*2+0] = part_x / 2.0F; 	vtx[3*2+1] = -part_y / 2.0F;
 				
 				glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-				#else
-				glBegin(GL_QUADS);
-				glTexCoord2f(t_part_x*j, t_part_y*i);
-				glVertex3f( -part_x / 2.0F, -part_y / 2.0F, 0);
-
-				glTexCoord2f(t_part_x*j, t_part_y*(i + 1));
-				glVertex3f( -part_x / 2.0F, part_y / 2.0F, 0);
-
-				glTexCoord2f(t_part_x*(j + 1), t_part_y*(i + 1));
-				glVertex3f(part_x / 2.0F, part_y / 2.0F, 0);
-
-				glTexCoord2f(t_part_x*(j + 1), t_part_y*i);
-				glVertex3f(part_x / 2.0F, -part_y / 2.0F, 0);
-
-				glEnd();
-				#endif
 
 				glDisable(GL_TEXTURE_2D);
 			} 
@@ -142,10 +108,8 @@ void GLTile::f1_draw_effect1(int ax, int ay, int az, int h_tiles, int v_tiles, i
 
 		} 
 	} 
-	#ifdef HAVE_GLES
 	glDisableClientState(GL_VERTEX_ARRAY);
 	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-	#endif
 
 	glPopMatrix();
 

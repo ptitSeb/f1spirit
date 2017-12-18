@@ -2,19 +2,14 @@
 #include "windows.h"
 #endif
 
-#include "stdio.h"
-#include "math.h"
-#include "stdlib.h"
-#include "string.h"
+#include <stdio.h>
+#include <math.h>
+#include <stdlib.h>
+#include <string.h>
 
-#ifdef HAVE_GLES
-#include <GLES/gl.h>
-//#include <GLES/glu.h>
-#else
-#include "GL/gl.h"
-#include "GL/glu.h"
-#endif
-#include "SDL.h"
+#include "3DStuff.h"
+
+#include <SDL.h>
 
 #include "F1Spirit.h"
 #include "stdlib.h"
@@ -405,7 +400,7 @@ void CTrack::draw(SDL_Rect *vp, float x, float y, float zoom, List<CPlacedGLTile
 	lrt2 = new GLuint[1];
 	lrt2[0] = lroad_textures[1]->get_texture(0);
 	rrt = new GLuint[1];
-	rrt[0] = lroad_textures[0]->get_texture(0);
+	rrt[0] = rroad_textures[0]->get_texture(0);
 	rrt2 = new GLuint[1];
 	rrt2[0] = rroad_textures[1]->get_texture(0);
 
@@ -421,7 +416,7 @@ void CTrack::draw(SDL_Rect *vp, float x, float y, float zoom, List<CPlacedGLTile
 
 	glPushMatrix();
 
-	glScalef(zoom, zoom, zoom);
+	glScalef(zoom, zoom, 1.0f/*zoom*/);
 
 	if (vp == 0) {
 		start_x = 320 - x;
@@ -439,19 +434,16 @@ void CTrack::draw(SDL_Rect *vp, float x, float y, float zoom, List<CPlacedGLTile
 	part_y = int(y / part_v);
 	part_neighbors = int(((part_rad + screen_rad) / max(part_h, part_v)) + 1);
 
-	#ifdef HAVE_GLES
+	glDepthMask(GL_TRUE);
 	glClear(GL_DEPTH_BUFFER_BIT);
 	glEnable(GL_BLEND);
 	glEnable(GL_ALPHA_TEST);
 	glEnable(GL_DEPTH_TEST);
-	glDepthMask(GL_TRUE);
 	glAlphaFunc( GL_GREATER, 0.0f );
 	glEnable(GL_COLOR_MATERIAL);
-	#endif
 
 	tmp2 = (screen_rad + part_rad) * (screen_rad + part_rad);
 
-	#ifdef HAVE_GLES
 	#define MAX_TM	16384
 	GLfloat	*tm_vtx=new GLfloat[MAX_TM*3];
 	GLfloat *tm_col=new GLfloat[MAX_TM*4];
@@ -460,15 +452,13 @@ void CTrack::draw(SDL_Rect *vp, float x, float y, float zoom, List<CPlacedGLTile
 	int	tm_idx, tm_ids;
 	tm_idx = 0;
 	tm_ids = 0;
-	#endif
 
-	#ifdef HAVE_GLES
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_ALPHA_TEST);
 	glDisable(GL_BLEND);
 	glDepthMask(GL_TRUE);
 	glesSpecial(true);
-	#endif
+
 	for (k = 8;k >= 0;k--) 
 	{
 
@@ -484,21 +474,20 @@ void CTrack::draw(SDL_Rect *vp, float x, float y, float zoom, List<CPlacedGLTile
 						l3.Rewind();
 
 						while (l3.Iterate(rpt)) {
-							rpt->draw(float(start_x), float(start_y), /*0.0f*/k*-8.0f, 0, 1);
+							rpt->draw(float(start_x), float(start_y), /*0.0f*/float(k)*(-2.0f), 0, 1);
 						}
 					} 
 				} 
 			} 
 		} 
 	}
-	#ifdef HAVE_GLES
+
 	glesSpecial(false);
-	#endif
-	#ifdef HAVE_GLES
+
 	glDisable(GL_ALPHA_TEST);
 	glDisable(GL_BLEND);
 	glDepthMask(GL_FALSE);
-	#endif
+
 	/* Draw the background: */
 	if (background_type != 0) {
 		glEnable(GL_COLOR_MATERIAL);
@@ -509,7 +498,6 @@ void CTrack::draw(SDL_Rect *vp, float x, float y, float zoom, List<CPlacedGLTile
 		glColor4f(1, 1, 1, 1);
 		glNormal3f(0.0, 0.0, 1.0);
 
-		#ifdef HAVE_GLES
 		glEnableClientState(GL_VERTEX_ARRAY);
 		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 		GLfloat tex[] = {0, 0  ,  0, float(dy) / 8  ,  float(dx) / 8, float(dy) / 8  ,  float(dx) / 8, 0 };
@@ -519,27 +507,9 @@ void CTrack::draw(SDL_Rect *vp, float x, float y, float zoom, List<CPlacedGLTile
 		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 		glDisableClientState(GL_VERTEX_ARRAY);
 		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-		#else
-		glBegin(GL_QUADS);
-		glTexCoord2f(0, 0);
-		glVertex3f(float(start_x), float(start_y), 0);
-
-		glTexCoord2f(0, float(dy) / 8);
-		glVertex3f(float(start_x), float(start_y + dy*8), 0);
-
-		glTexCoord2f(float(dx) / 8, float(dy) / 8);
-		glVertex3f(float(start_x + dx*8), float(start_y + dy*8), 0);
-
-		glTexCoord2f(float(dx) / 8, 0);
-		glVertex3f(float(start_x + dx*8), float(start_y), 0);
-
-		glEnd();
-		#endif
 	}
-	#ifdef HAVE_GLES
 	glEnable(GL_BLEND);
 	glesSpecial(true);
-	#endif
 	for (k = 8;k >= 0;k--) {
 
 /*		tm_l.Instance(tyre_marks);
@@ -597,10 +567,8 @@ void CTrack::draw(SDL_Rect *vp, float x, float y, float zoom, List<CPlacedGLTile
 			} 
 		}
 	}
-	#ifdef HAVE_GLES
 	glesSpecial(false);
 	glDepthMask(GL_FALSE);
-	#endif
 	{	//no for k here, not "k" dependant.
 
 		tm_l.Instance(tyre_marks);
@@ -621,25 +589,21 @@ void CTrack::draw(SDL_Rect *vp, float x, float y, float zoom, List<CPlacedGLTile
 						a = 1;
 
 					a = 1 - a;
-					#ifdef HAVE_GLES
-					tm_curcol[0]=tm->r; tm_curcol[1]=tm->g; tm_curcol[2]=tm->b; tm_curcol[3]=a*0.75f;
-					#else
-					glNormal3f(0.0, 0.0, 1.0);
 
-					glColor4f(tm->r, tm->g, tm->b, a*0.75F);
-					#endif
+					tm_curcol[0]=tm->r; tm_curcol[1]=tm->g; tm_curcol[2]=tm->b; tm_curcol[3]=a*0.75f;
 
 					if (tm->t > 0) {
 						//      glBegin(GL_LINES);
 						//      glVertex3f(start_x+tm->x,start_y+tm->y,0);
 						//      glVertex3f(start_x+tm->x2,start_y+tm->y2,0);
 						//      glEnd();
-						#ifdef HAVE_GLES
 						#define glVertex3f(a, b, c) \
 							tm_vtx[tm_idx*3+0]=a; tm_vtx[tm_idx*3+1]=b; tm_vtx[tm_idx*3+2]=c; \
 							memcpy(tm_col+tm_idx*4, tm_curcol, 4*sizeof(GLfloat)); \
 							tm_idx++
-						#define GL_QUADS	0
+						#ifndef GL_QUADS
+						#define GL_QUADS	7
+						#endif
 						#define glBegin(a)
 						#define glEnd()	tm_indices[tm_ids++]=tm_idx-4; tm_indices[tm_ids++]=tm_idx-3; tm_indices[tm_ids++]=tm_idx-2; \
 							tm_indices[tm_ids++]=tm_idx-2; tm_indices[tm_ids++]=tm_idx-1; tm_indices[tm_ids++]=tm_idx-4; \
@@ -654,7 +618,7 @@ void CTrack::draw(SDL_Rect *vp, float x, float y, float zoom, List<CPlacedGLTile
 								glDisableClientState(GL_VERTEX_ARRAY); \
 								tm_ids=0; tm_idx=0; \
 							}
-						#endif
+
 						if ((tm->z <= k*( -8) && tm->z > (k + 1)*( -8) && tm->z >= tm->z2) ||
 			        		    (tm->z2 <= k*( -8) && tm->z2 > (k + 1)*( -8) && tm->z < tm->z2)) {
 							glBegin(GL_QUADS);
@@ -664,12 +628,9 @@ void CTrack::draw(SDL_Rect *vp, float x, float y, float zoom, List<CPlacedGLTile
 							glVertex3f(start_x + tm->qx[2], start_y + tm->qy[2], tm->z2);
 							glEnd();
 						}
-						#ifdef HAVE_GLES
-						#undef GL_QUADS
 						#undef glVertex3f
 						#undef glBegin
 						#undef glEnd
-						#endif
 					} 
 				}
 
@@ -677,7 +638,6 @@ void CTrack::draw(SDL_Rect *vp, float x, float y, float zoom, List<CPlacedGLTile
 
 //			road_position += rp->get_length();
 	}
-	#ifdef HAVE_GLES
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_COLOR_ARRAY);
 	glVertexPointer(3, GL_FLOAT, 0, tm_vtx);
@@ -686,7 +646,7 @@ void CTrack::draw(SDL_Rect *vp, float x, float y, float zoom, List<CPlacedGLTile
 	glDrawElements(GL_TRIANGLES, tm_ids, GL_UNSIGNED_SHORT, tm_indices);
 	glDisableClientState(GL_COLOR_ARRAY);
 	glDisableClientState(GL_VERTEX_ARRAY);
-	#endif
+
 	for (k = 0;k < 9;k++) {
 		if (extras != 0) {
 			l.Instance(*extras);
@@ -707,13 +667,11 @@ void CTrack::draw(SDL_Rect *vp, float x, float y, float zoom, List<CPlacedGLTile
 			} 
 		} 
 	}
-	#ifdef HAVE_GLES
 	glDisable(GL_DEPTH_TEST);
 	#undef MAX_TM
 	delete []tm_vtx;
 	delete []tm_col;
 	delete []tm_indices;
-	#endif
 
 	glPopMatrix();
 	delete []rt;

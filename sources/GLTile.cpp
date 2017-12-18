@@ -2,15 +2,10 @@
 #include "windows.h"
 #endif
 
-#ifdef HAVE_GLES
-#include <GLES/gl.h>
-//#include <GLES/glu.h>
-#else
-#include "GL/gl.h"
-#include "GL/glu.h"
-#endif
-#include "SDL.h"
-#include "SDL_image.h"
+#include "3DStuff.h"
+
+#include <SDL.h>
+#include <SDL_image.h>
 
 #include "auxiliar.h"
 #include "2DCMC.h"
@@ -20,7 +15,7 @@
 #ifdef KITSCHY_DEBUG_MEMORY
 #include "debug_memorymanager.h"
 #endif
-#ifdef HAVE_GLES
+
 #define glTranslatef	glesTranslatef
 #define glRotatef		glesRotatef
 #define glScalef		glesScalef
@@ -36,10 +31,8 @@
 #define glEnd			glesEnd
 
 extern bool special;
-
-#define GL_QUADS 		0
-#else
-#define special false
+#ifndef GL_QUADS
+#define GL_QUADS 		7
 #endif
 
 int reload_textures = 0;

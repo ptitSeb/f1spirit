@@ -4,22 +4,17 @@
 #include <dirent.h>
 #endif
 
-#include "stdio.h"
-#include "math.h"
-#include "stdlib.h"
-#include "string.h"
+#include <stdio.h>
+#include <math.h>
+#include <stdlib.h>
+#include <string.h>
 
-#ifdef HAVE_GLES
-#include <GLES/gl.h>
-//#include <GLES/glu.h>
-#else
-#include "GL/gl.h"
-#include "GL/glu.h"
-#endif
-#include "SDL.h"
-#include "SDL_mixer.h"
-#include "SDL_image.h"
-#include "SDL_net.h"
+#include "3DStuff.h"
+
+#include <SDL.h>
+#include <SDL_mixer.h>
+#include <SDL_image.h>
+#include <SDL_net.h>
 
 #include <curl/curl.h>
 
@@ -1111,7 +1106,7 @@ void F1SpiritApp::menu_create_menu(void)
 			break;
 
 		case 21:
-			menu_title[0] = new char[strlen("Nº OF PLAYERS") + 1];
+			menu_title[0] = new char[strlen("Nï¿½ OF PLAYERS") + 1];
 			strcpy(menu_title[0], "MULTIPLAYER");
 			menu_options[0] = new char[strlen("2 PLAYERS\n3 PLAYERS\n4 PLAYERS\nBACK\n") + 1];
 			strcpy(menu_options[0], "2 PLAYERS\n3 PLAYERS\n4 PLAYERS\nBACK\n");
@@ -1367,7 +1362,7 @@ void F1SpiritApp::menu_create_menu(void)
 
 			break;
 
-			/* SELECTION OF Nº OF ENEMY CARS AND OF ENEMY SPEED IN MULTIPLAYER MODES: */
+			/* SELECTION OF Nï¿½ OF ENEMY CARS AND OF ENEMY SPEED IN MULTIPLAYER MODES: */
 
 		case 46: {
 				char tmp[128];

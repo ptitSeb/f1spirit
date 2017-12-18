@@ -4,21 +4,16 @@
 #include "dirent.h"
 #endif
 
-#include "stdio.h"
-#include "math.h"
-#include "stdlib.h"
-#include "string.h"
+#include <stdio.h>
+#include <math.h>
+#include <stdlib.h>
+#include <string.h>
 
-#ifdef HAVE_GLES
-#include <GLES/gl.h>
-//#include <GLES/glu.h>
-#else
-#include "GL/gl.h"
-#include "GL/glu.h"
-#endif
-#include "SDL.h"
-#include "SDL_mixer.h"
-#include "SDL_net.h"
+#include "3DStuff.h"
+
+#include <SDL.h>
+#include <SDL_mixer.h>
+#include <SDL_net.h>
 
 #include "F1Spirit.h"
 #include "sound.h"
@@ -330,7 +325,7 @@ void F1SpiritApp::replaymanager_draw(void)
 		bool prev;
 		glEnable(GL_COLOR_MATERIAL);
 		//  glColor3f(0.8F,0.8F,0.8F);
-		#ifdef HAVE_GLES
+
 		glEnableClientState(GL_VERTEX_ARRAY);
 		glEnableClientState(GL_NORMAL_ARRAY);
 		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -343,7 +338,9 @@ void F1SpiritApp::replaymanager_draw(void)
 		glTexCoordPointer(2, GL_FLOAT, 0, tex);
 		int idx = 0;
 		int ids = 0;
-		#define GL_QUADS 0
+		#ifndef GL_QUADS
+		#define GL_QUADS 7
+		#endif
 		#define glBegin(a)	{idx = 0; ids = 0;}
 		#define glTexCoord2f(a, b)	tex[idx*2+0]=a; tex[idx*2+1]=b
 		#define glNormal3f(a, b, c) nrm[idx*3+0]=a; nrm[idx*3+1]=b; nrm[idx*3+2]=c
@@ -352,9 +349,7 @@ void F1SpiritApp::replaymanager_draw(void)
 			 indices[ids++]=idx-2; indices[ids++]=idx-1; indices[ids++]=idx-4; }
 		#define glEnd()		glDrawElements(GL_TRIANGLES, ids, GL_UNSIGNED_SHORT, indices);
 		glColor4f(1.0F, 1.0F, 1.0F, 1.0f);
-		#else
-		glColor3f(1.0F, 1.0F, 1.0F);
-		#endif
+
 		glEnable(GL_TEXTURE_2D);
 		glBindTexture(GL_TEXTURE_2D, menu_flag->get_texture(0));
 
@@ -479,17 +474,16 @@ void F1SpiritApp::replaymanager_draw(void)
 			} 
 		} 
 	glEnd();
-	#ifdef HAVE_GLES
+
 	glDisableClientState(GL_VERTEX_ARRAY);
 	glDisableClientState(GL_NORMAL_ARRAY);
 	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-	#undef GL_QUADS
+
 	#undef glVertex3f
 	#undef glNormal3f
 	#undef glTexCoord2f
 	#undef glBegin
 	#undef glEnd
-	#endif
 	} 
 
 	/* Draw the replay-names list: */
@@ -698,7 +692,7 @@ void F1SpiritApp::replaymanager_draw(void)
 
 			y += 12;
 
-			/* nº of players: */
+			/* nï¿½ of players: */
 			sprintf(tmp, "Number of Players: %i", ri->n_player_cars);
 
 			sfc = SDL_CreateRGBSurface(SDL_SWSURFACE, get_text_width_bmp((unsigned char *)tmp, small_font, 0), small_font->h, 32, RMASK, GMASK, BMASK, AMASK);
@@ -766,7 +760,6 @@ void F1SpiritApp::replaymanager_draw(void)
 		#define MINX 0
 		#define MAXX 640
 		#endif
-		#ifdef HAVE_GLES
 		GLfloat vtx[] = {MINX, 0, -4, 
 						 MINX, 480, -4, 
 						 MAXX, 480, -4,
@@ -775,14 +768,6 @@ void F1SpiritApp::replaymanager_draw(void)
 		glVertexPointer(3, GL_FLOAT, 0, vtx);
 		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 		glDisableClientState(GL_VERTEX_ARRAY);
-		#else
-		glBegin(GL_QUADS);
-		glVertex3f(0, 0, -4);
-		glVertex3f(0, 480, -4);
-		glVertex3f(640, 480, -4);
-		glVertex3f(640, 0, -4);
-		glEnd();
-		#endif
 	} 
 
 	/* Replay mini-view: */
@@ -816,7 +801,6 @@ void F1SpiritApp::replaymanager_draw(void)
 
 		glNormal3f(0.0, 0.0, 1.0);
 
-		#ifdef HAVE_GLES
 		GLfloat vtx[] = {MINX, 0, -4, 
 						 MINX, 480, -4, 
 						 MAXX, 480, -4,
@@ -825,14 +809,6 @@ void F1SpiritApp::replaymanager_draw(void)
 		glVertexPointer(3, GL_FLOAT, 0, vtx);
 		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 		glDisableClientState(GL_VERTEX_ARRAY);
-		#else
-		glBegin(GL_QUADS);
-		glVertex3f(0, 0, -4);
-		glVertex3f(0, 480, -4);
-		glVertex3f(640, 480, -4);
-		glVertex3f(640, 0, -4);
-		glEnd();
-		#endif
 	} 
 
 } 

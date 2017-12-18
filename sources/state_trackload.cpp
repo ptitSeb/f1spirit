@@ -58,8 +58,7 @@ int F1SpiritApp::trackload_cycle(KEYBOARDSTATE *k)
 
 		/* init F1SpiritGame object */
 		delete race_game;
-#ifdef HAVE_C4A
-		if (c4a)
+		if (arcade)
 		{
 			F1S_GParameters parameters;
 			parameters.load_ascii("f1spirit2.cfg");
@@ -67,10 +66,7 @@ int F1SpiritApp::trackload_cycle(KEYBOARDSTATE *k)
 			menu_multiplayer_enemy_speed = 0;
 		}
 
-		race_game = new F1SpiritGame(current_player, menu_selected_track, menu_selected_nplayers, menu_multiplayer_n_enemycars, menu_multiplayer_enemy_speed, (int *)menu_selected_car, (int **)menu_selected_part, font, k, c4a);
-#else
-		race_game = new F1SpiritGame(current_player, menu_selected_track, menu_selected_nplayers, menu_multiplayer_n_enemycars, menu_multiplayer_enemy_speed, (int *)menu_selected_car, (int **)menu_selected_part, font, k);
-#endif
+		race_game = new F1SpiritGame(current_player, menu_selected_track, menu_selected_nplayers, menu_multiplayer_n_enemycars, menu_multiplayer_enemy_speed, (int *)menu_selected_car, (int **)menu_selected_part, font, k, arcade);
 		race_state = 0;
 		race_state_timmer = 0;
 

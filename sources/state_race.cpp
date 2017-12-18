@@ -98,12 +98,11 @@ int F1SpiritApp::race_cycle(KEYBOARDSTATE *k)
 			{
 				int i;
 				bool all_completed = true;
-#ifdef HAVE_C4A
-				if (c4a) {
+				if (arcade) {
 					if (race_game->get_racefinished())
 						if (race_game->get_player_position(0)<16 ) {	// must have points to continue
 							Uint32 points[16] = {20, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1};
-							c4a_result+=points[race_game->get_player_position(0)];
+							arcade_result+=points[race_game->get_player_position(0)];
 							current_player->set_points(menu_selected_track ,points[race_game->get_player_position(0)]);
 							menu_selected_track++;
 							if (menu_selected_track<N_TRACKS)
@@ -113,7 +112,6 @@ int F1SpiritApp::race_cycle(KEYBOARDSTATE *k)
 						menu_selected_track = N_TRACKS;	// the game was aborted...
 					return APP_STATE_RACE_RESULT;
 				}
-#endif
 				for (i = 0;i < 20;i++)
 					if (current_player->get_points(i) != 9)
 						all_completed = false;

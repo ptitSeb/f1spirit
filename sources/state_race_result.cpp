@@ -99,11 +99,11 @@ int F1SpiritApp::race_result_cycle(KEYBOARDSTATE *k)
 		/* Set the High scores: */
 		if (current_player != 0) {
 #ifdef HAVE_C4A
-			if (c4a) {
+			if (arcade) {
 				char buf[500];
-				sprintf(buf, "fusilli --cache push f1spirit %i 0", c4a_result);
+				sprintf(buf, "fusilli --cache push f1spirit %i 0", arcade_result);
 				//printf("%s\n", buf);
-				if (c4a_result>0) system(buf);
+				if (arcade_result>0) system(buf);
 			} else
 #endif
 			{
@@ -322,19 +322,11 @@ int F1SpiritApp::race_result_cycle(KEYBOARDSTATE *k)
 
 				menu_fading = -1;
 				menu_fading_ctnt = 25;
-#ifdef HAVE_C4A
-				menu_current_menu = (c4a)?0:4;
-#else
-				menu_current_menu = 4;
-#endif
+				menu_current_menu = (arcade)?0:4;
 				if (raceresult_selected == 0) {
 					return APP_STATE_MENU;
 				} else {
-#ifdef HAVE_C4A
-					return (c4a)?APP_STATE_MENU:APP_STATE_TRACKLOAD;
-#else
-					return APP_STATE_TRACKLOAD;
-#endif
+					return (arcade)?APP_STATE_MENU:APP_STATE_TRACKLOAD;
 				} 
 			} 
 
@@ -817,9 +809,12 @@ void F1SpiritApp::race_result_draw(void)
 			t->draw(320, y, 0, 0, 1);
 			delete t;
 			y += 32;
+			if (arcade) {
 #ifdef HAVE_C4A
-			if (c4a) {
-				sprintf((char *)tmp, "C4A SCORE  :%i", c4a_result);
+				sprintf((char *)tmp, "C4A SCORE  :%i", arcade_result);
+#else
+				sprintf((char *)tmp, "ARCADE SCORE  :%i", arcade_result);
+#endif
 				sfc = SDL_CreateRGBSurface(SDL_SWSURFACE, get_text_width_bmp((unsigned char *)tmp, font, 0), font->h, 32, RMASK, GMASK, BMASK, AMASK);
 				print_left_bmp((unsigned char *)tmp, font, sfc, 0, 0, 0);
 				t = new GLTile(sfc);
@@ -828,7 +823,6 @@ void F1SpiritApp::race_result_draw(void)
 				delete t;
 				y += 32;
 			}
-#endif
 			if (current_player != friendly_player) {
 				sprintf((char *)tmp, "BEST POINT");
 				sfc = SDL_CreateRGBSurface(SDL_SWSURFACE, get_text_width_bmp((unsigned char *)tmp, font, 0), font->h, 32, RMASK, GMASK, BMASK, AMASK);

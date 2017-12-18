@@ -46,11 +46,7 @@ class F1SpiritGame
 		friend class CCar;
 
 	public:
-#ifdef HAVE_C4A
-		F1SpiritGame(CPlayerInfo *player, int ntrack, int nplayers, int ncars, int enemy_speed, int *selected_car, int **selected_part, SDL_Surface *f, KEYBOARDSTATE *k, int c4a);
-#else
-		F1SpiritGame(CPlayerInfo *player, int ntrack, int nplayers, int ncars, int enemy_speed, int *selected_car, int **selected_part, SDL_Surface *f, KEYBOARDSTATE *k);
-#endif
+		F1SpiritGame(CPlayerInfo *player, int ntrack, int nplayers, int ncars, int enemy_speed, int *selected_car, int **selected_part, SDL_Surface *f, KEYBOARDSTATE *k, int arcade);
 		F1SpiritGame(CReplayInfo *ri, SDL_Surface *f, KEYBOARDSTATE *k);
 		~F1SpiritGame();
 

@@ -18,7 +18,7 @@
 
 #define MSG_ACK    0
 #define MSG_NACK   1
-#define MSG_REGISTER  2 /* va acompañado de 'size' (2 bytes) + 'name' (size bytes) */
+#define MSG_REGISTER  2 /* va acompaï¿½ado de 'size' (2 bytes) + 'name' (size bytes) */
 #define MSG_UNREGISTER  3
 #define MSG_CHAT   4 /* namesize + name + msgsize + msg */
 #define MSG_NAME_QUERY  5
@@ -283,10 +283,8 @@ class F1SpiritApp
 		List<CReplayInfo> replaymanager_replays;
 		List<GLTile> replaymanager_replaytiles;
 		GLTile *replaymanager_frame1, *replaymanager_frame2;
-#ifdef HAVE_C4A
-		int c4a;
-		int c4a_result;
-#endif
+		int arcade;
+		int arcade_result;
 };
 
 #endif

@@ -27,6 +27,7 @@ C2DCMC::C2DCMC(float *p, int np)
 {
 	set
 	(p, np);
+	quick = false;
 } 
 
 
@@ -34,6 +35,7 @@ C2DCMC::C2DCMC(float *px, float *py, int np)
 {
 	set
 	(px, py, np);
+	quick = false;
 } 
 
 

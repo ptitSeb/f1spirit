@@ -97,7 +97,7 @@ SDL_Surface *initialization(int flags)
 	output_debug_message("Initializing SDL\n");
 #endif
 
-	if (SDL_Init(SDL_INIT_VIDEO | (sound ? SDL_INIT_AUDIO : 0) | SDL_INIT_JOYSTICK) < 0) {
+	if (SDL_Init(SDL_INIT_VIDEO | (sound ? SDL_INIT_AUDIO : 0) | SDL_INIT_JOYSTICK | SDL_INIT_EVENTTHREAD) < 0) {
 #ifdef F1SPIRIT_DEBUG_MESSAGES
 		output_debug_message("Video initialization failed: %s\n", SDL_GetError());
 #endif

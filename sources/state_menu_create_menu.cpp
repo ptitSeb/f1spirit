@@ -83,23 +83,21 @@ void F1SpiritApp::menu_create_menu(void)
 					menu_options[0] = new char[strlen("CONTINUE GAME\nNEW GAME\nPRACTICE MODE\nC4A GAME\nTITLE SCREEN\n") + 1];
 					strcpy(menu_options[0], "CONTINUE GAME\nNEW GAME\nPRACTICE MODE\nC4A GAME\nTITLE SCREEN\n");
 #else
-					menu_options[0] = new char[strlen("CONTINUE GAME\nNEW GAME\nPRACTICE MODE\nTITLE SCREEN\n") + 1];
-					strcpy(menu_options[0], "CONTINUE GAME\nNEW GAME\nPRACTICE MODE\nTITLE SCREEN\n");
+					menu_options[0] = new char[strlen("CONTINUE GAME\nNEW GAME\nPRACTICE MODE\nARCADE GAME\nTITLE SCREEN\n") + 1];
+					strcpy(menu_options[0], "CONTINUE GAME\nNEW GAME\nPRACTICE MODE\nARCADE GAME\nTITLE SCREEN\n");
 #endif
 					menu_noptions[0] = 5;
 					menu_option_type[0][0] = 1;
 					menu_option_type[0][1] = 1;
 					menu_option_type[0][2] = 1;
-#ifdef HAVE_C4A
+
 					menu_option_type[0][3] = 1;
 					menu_option_type[0][4] = 0;
-#else
-					menu_option_type[0][3] = 0;
-#endif
+
 					menu_option_parameter[0][0] = 2;
 					menu_option_parameter[0][1] = 1;
 					menu_option_parameter[0][2] = 4;
-					menu_option_parameter[0][3] = 214; //C4A
+					menu_option_parameter[0][3] = 214; //ARCADE / C4A
 					menu_first_option[0] = 0;
 				} else {
 					menu_title[0] = new char[strlen("CHOOSE AN OPTION") + 1];
@@ -108,27 +106,23 @@ void F1SpiritApp::menu_create_menu(void)
 					menu_options[0] = new char[strlen("NEW GAME\nPRACTICE MODE\nC4A GAME\nTITLE SCREEN\n") + 1];
 					strcpy(menu_options[0], "NEW GAME\nPRACTICE MODE\nC4A GAME\nTITLE SCREEN\n");
 #else
-					menu_options[0] = new char[strlen("NEW GAME\nPRACTICE MODE\nTITLE SCREEN\n") + 1];
-					strcpy(menu_options[0], "NEW GAME\nPRACTICE MODE\nTITLE SCREEN\n");
+					menu_options[0] = new char[strlen("NEW GAME\nPRACTICE MODE\nARCADE GAME\nTITLE SCREEN\n") + 1];
+					strcpy(menu_options[0], "NEW GAME\nPRACTICE MODE\nARCADE GAME\nTITLE SCREEN\n");
 #endif
 					menu_noptions[0] = 4;
 					menu_option_type[0][0] = 1;
 					menu_option_type[0][1] = 1;
-#ifdef HAVE_C4A
+
 					menu_option_type[0][2] = 1;
 					menu_option_type[0][3] = 0;
-#else
-					menu_option_type[0][2] = 0;
-#endif
+
 					menu_option_parameter[0][0] = 1;
 					menu_option_parameter[0][1] = 4;
 					menu_option_parameter[0][2] = 214;
 					menu_first_option[0] = 0;
 				} 
 			}
-#ifdef HAVE_C4A
-			c4a = 0;
-#endif
+			arcade = 0;
 			break;
 
 		case 211:
@@ -141,11 +135,9 @@ void F1SpiritApp::menu_create_menu(void)
 			menu_noptions[0] = 2;
 			menu_option_type[0][0] = 2;
 			menu_option_type[0][1] = 1;
-#ifdef HAVE_C4A
+
 			menu_option_parameter[0][0] = 37+(menu_current_menu-1);
-#else
-			menu_option_parameter[0][0] = 37;
-#endif
+
 			menu_option_parameter[0][1] = 0;
 			menu_first_option[0] = 0;
 			menu_editing_valid = false;
@@ -164,11 +156,9 @@ void F1SpiritApp::menu_create_menu(void)
 				menu_noptions[0] = 2;
 				menu_option_type[0][0] = 24;
 				menu_option_type[0][1] = 1;
-#ifdef HAVE_C4A
+
 				menu_option_parameter[0][0] = 4+(menu_current_menu-37);
-#else
-				menu_option_parameter[0][0] = 4;
-#endif
+
 				menu_option_parameter[0][1] = 0;
 				menu_first_option[0] = 0;
 				menu_editing_valid = false;
@@ -287,10 +277,8 @@ void F1SpiritApp::menu_create_menu(void)
 
 			break;
 		case 4:
-#ifdef HAVE_C4A
 		case 214:
-			c4a = (menu_current_menu>210)?1:0;
-#endif
+			arcade = (menu_current_menu>210)?1:0;
 			if (current_player == 0) {
 				FILE *fp;
 				current_player = friendly_player;
@@ -312,9 +300,7 @@ void F1SpiritApp::menu_create_menu(void)
 				} 
 
 			} 
-#ifdef HAVE_C4A
 			if (menu_current_menu==4) 
-#endif
 			{
 				menu_title[0] = new char[strlen(current_player->get_name()) + 1];
 				strcpy(menu_title[0], current_player->get_name());
@@ -336,7 +322,6 @@ void F1SpiritApp::menu_create_menu(void)
 				menu_option_parameter[0][5] = 29;
 				menu_first_option[0] = 0;
 			}
-#ifdef HAVE_C4A 
 			else {
 				menu_title[0] = new char[strlen(current_player->get_name()) + 1];
 				strcpy(menu_title[0], current_player->get_name());
@@ -352,7 +337,6 @@ void F1SpiritApp::menu_create_menu(void)
 				menu_selected_track = 0;	// start from the beggining
 
 			}
-#endif
 			break;
 
 		case 25:
@@ -374,7 +358,6 @@ void F1SpiritApp::menu_create_menu(void)
 			menu_option_parameter[0][3] = 4;
 			menu_first_option[0] = 0;
 			break;
-#ifdef HAVE_C4A
 		case 5+210:
 		case 6+210:
 		case 7+210:
@@ -383,7 +366,6 @@ void F1SpiritApp::menu_create_menu(void)
 		case 20+210:
 		case 22+210:
 		case 24+210:
-#endif
 		case 5:
 		case 6:
 		case 7:
@@ -392,9 +374,7 @@ void F1SpiritApp::menu_create_menu(void)
 		case 20:
 		case 22:
 		case 24:
-#ifdef HAVE_C4A
-			c4a = (menu_current_menu>210)?1:0;
-#endif
+			arcade = (menu_current_menu>210)?1:0;
 			{
 				int i, l, pos;
 				char *volumes[5] = {"NONE", "LOW ", "MED ", "HIGH", "MAX "};
@@ -430,19 +410,11 @@ void F1SpiritApp::menu_create_menu(void)
 
 				for (i = 0;i < current_player->get_nplayers();i++) {
 					menu_option_type[0][i + 2] = 11;
-#ifdef HAVE_C4A
-					menu_option_parameter[0][i + 2] = 22+c4a*210;
-#else
-					 menu_option_parameter[0][i + 2] = 22;
-#endif
+					menu_option_parameter[0][i + 2] = 22+arcade*210;
 				}
 
 				menu_option_type[0][current_player->get_nplayers() + 2] = 1;
-#ifdef HAVE_C4A
-				menu_option_parameter[0][current_player->get_nplayers() + 2] = 4+c4a*210;
-#else
-				menu_option_parameter[0][current_player->get_nplayers() + 2] = 4;
-#endif
+				menu_option_parameter[0][current_player->get_nplayers() + 2] = 4+arcade*210;
 
 				if ((menu_current_menu == 5) || (menu_current_menu == 5+210))
 					menu_first_option[0] = 0;
@@ -456,22 +428,12 @@ void F1SpiritApp::menu_create_menu(void)
 				menu_option_type[1][0] = 1;
 				menu_option_type[1][1] = 1;
 				menu_option_type[1][2] = 1;
-#ifdef HAVE_C4A
-				menu_option_parameter[1][0] = 7+c4a*210;
-				menu_option_parameter[1][1] = 8+c4a*210;
-				menu_option_parameter[1][2] = 5+c4a*210;
-#else
-				menu_option_parameter[1][0] = 7;
-				menu_option_parameter[1][1] = 8;
-				menu_option_parameter[1][2] = 5;
-#endif
+				menu_option_parameter[1][0] = 7+arcade*210;
+				menu_option_parameter[1][1] = 8+arcade*210;
+				menu_option_parameter[1][2] = 5+arcade*210;
 				menu_first_option[1] = 0;
 			} 
-#ifdef HAVE_C4A
 			if ((menu_current_menu == 7) || (menu_current_menu == 7+210))
-#else
-			if (menu_current_menu == 7)
-#endif
 			{
 				char tmp[256];
 				menu_title[1] = 0;
@@ -493,23 +455,13 @@ void F1SpiritApp::menu_create_menu(void)
 				menu_option_type[1][4] = 7;
 				menu_option_type[1][5] = 7;
 				menu_option_type[1][6] = 1;
-#ifdef HAVE_C4A
-				menu_option_parameter[1][0] = 7+c4a*210;
-				menu_option_parameter[1][1] = 7+c4a*210;
-				menu_option_parameter[1][2] = 7+c4a*210;
-				menu_option_parameter[1][3] = 7+c4a*210;
-				menu_option_parameter[1][4] = 7+c4a*210;
-				menu_option_parameter[1][5] = 7+c4a*210;
-				menu_option_parameter[1][6] = 6+c4a*210;
-#else
-				menu_option_parameter[1][0] = 7;
-				menu_option_parameter[1][1] = 7;
-				menu_option_parameter[1][2] = 7;
-				menu_option_parameter[1][3] = 7;
-				menu_option_parameter[1][4] = 7;
-				menu_option_parameter[1][5] = 7;
-				menu_option_parameter[1][6] = 6;
-#endif
+				menu_option_parameter[1][0] = 7+arcade*210;
+				menu_option_parameter[1][1] = 7+arcade*210;
+				menu_option_parameter[1][2] = 7+arcade*210;
+				menu_option_parameter[1][3] = 7+arcade*210;
+				menu_option_parameter[1][4] = 7+arcade*210;
+				menu_option_parameter[1][5] = 7+arcade*210;
+				menu_option_parameter[1][6] = 6+arcade*210;
 				menu_first_option[1] = 0;
 
 				if (current_player->get_joystick(menu_selected[0]) != -1) {
@@ -526,11 +478,7 @@ void F1SpiritApp::menu_create_menu(void)
 					}
 				} 
 			} 
-#ifdef HAVE_C4A
 			if ((menu_current_menu == 8) || (menu_current_menu == 8+210))
-#else
-			if (menu_current_menu == 8)
-#endif
 			{
 				int nj = SDL_NumJoysticks();
 				int i, pos;
@@ -549,18 +497,10 @@ void F1SpiritApp::menu_create_menu(void)
 				menu_noptions[1] = nj + 2;
 				for (i = 0;i < nj + 1;i++) {
 					menu_option_type[1][i] = 8;
-#ifdef HAVE_C4A
-					menu_option_parameter[1][i] = 6+c4a*210;
-#else
-					menu_option_parameter[1][i] = 6;
-#endif
+					menu_option_parameter[1][i] = 6+arcade*210;
 				} 
 				menu_option_type[1][nj + 1] = 1;
-#ifdef HAVE_C4A
-				menu_option_parameter[1][nj + 1] = 6+c4a*210;
-#else
-				menu_option_parameter[1][nj + 1] = 6;
-#endif
+				menu_option_parameter[1][nj + 1] = 6+arcade*210;
 				menu_first_option[1] = 0;
 			} 
 			break;
@@ -867,10 +807,8 @@ void F1SpiritApp::menu_create_menu(void)
 
 			break;
 		case 12:
-#ifdef HAVE_C4A
-		case 222:       // C4A
-			c4a = (menu_current_menu>210)?1:0;
-#endif
+		case 222:       // ARCADE / C4A
+			arcade = (menu_current_menu>210)?1:0;
 			{
 				char tmp[80];
 				sprintf(tmp, "CAR SELECTION PLAYER %i", menu_selecting_player + 1);
@@ -914,24 +852,14 @@ void F1SpiritApp::menu_create_menu(void)
 			} 
 
 			menu_noptions[0] = 4;
-#ifdef HAVE_C4A
-			menu_option_type[0][0] = 13+c4a*210;
-			menu_option_type[0][1] = 13+c4a*210;
-			menu_option_type[0][2] = 13+c4a*210;
-#else
-			menu_option_type[0][0] = 13;
-			menu_option_type[0][1] = 13;
-			menu_option_type[0][2] = 13;
-#endif
+			menu_option_type[0][0] = 13+arcade*210;
+			menu_option_type[0][1] = 13+arcade*210;
+			menu_option_type[0][2] = 13+arcade*210;
 			menu_option_type[0][3] = 1;
 			menu_option_parameter[0][0] = 0;
 			menu_option_parameter[0][1] = 1;
 			menu_option_parameter[0][2] = 2;
-#ifdef HAVE_C4A
-			menu_option_parameter[0][3] = (c4a)? 4+210:11;
-#else
-			menu_option_parameter[0][3] = 11;
-#endif
+			menu_option_parameter[0][3] = (arcade)? 4+210:11;
 			menu_first_option[0] = 0;
 			break;
 

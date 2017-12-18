@@ -78,12 +78,10 @@ int race_laps[N_TRACKS] = {4, 3, 4, 3, 3,
                            4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
                            6, 6, 6, 6
                           };
-#ifdef HAVE_C4A
-int race_lapsc4a[N_TRACKS] = {1, 1, 2, 1, 1,
+int race_lapsarcade[N_TRACKS] = {1, 1, 2, 1, 1,
                            2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
                            3, 3, 3, 3
                           };
-#endif
 
 void F1SpiritGame::initialize_track(int ntrack)
 {
@@ -837,11 +835,7 @@ void F1SpiritGame::initialize_track(int ntrack)
 
 } 
 
-#ifdef HAVE_C4A
-F1SpiritGame::F1SpiritGame(CPlayerInfo *player, int ntrack, int nplayers, int max_cars, int enemy_speed, int *selected_car, int **selected_part, SDL_Surface *f, KEYBOARDSTATE *k, int c4a)
-#else
-F1SpiritGame::F1SpiritGame(CPlayerInfo *player, int ntrack, int nplayers, int max_cars, int enemy_speed, int *selected_car, int **selected_part, SDL_Surface *f, KEYBOARDSTATE *k)
-#endif
+F1SpiritGame::F1SpiritGame(CPlayerInfo *player, int ntrack, int nplayers, int max_cars, int enemy_speed, int *selected_car, int **selected_part, SDL_Surface *f, KEYBOARDSTATE *k, int arcade)
 {
 	// int max_cars=2;
 	int n_enemy_cars = 1;
@@ -925,11 +919,7 @@ F1SpiritGame::F1SpiritGame(CPlayerInfo *player, int ntrack, int nplayers, int ma
 			effective_handycap_decrement *= 0.8F;
 
 		if (enemy_speed == 0)
-#ifdef HAVE_C4A
-			effective_base_handycap *= (c4a)?0.85:0.95;
-#else
-			effective_base_handycap *= 0.95;
-#endif
+			effective_base_handycap *= (arcade)?0.85:0.95;
 
 		if (enemy_speed == 2)
 			effective_base_handycap *= 1.05;
@@ -1292,11 +1282,10 @@ F1SpiritGame::F1SpiritGame(CPlayerInfo *player, int ntrack, int nplayers, int ma
 	output_debug_message("All players created.\n");
 #endif
 	race_time = 0;
-#ifdef HAVE_C4A
-	if (c4a)
-		race_nlaps = race_lapsc4a[ntrack];
+
+	if (arcade)
+		race_nlaps = race_lapsarcade[ntrack];
 	else
-#endif
 		race_nlaps = race_laps[ntrack];
 	race_state = 0;
 	race_state_timmer = 0;

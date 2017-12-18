@@ -1953,7 +1953,7 @@ CReplayEvent::~CReplayEvent()
 			playercar_status[i] = 0;
 		} 
 
-		delete playercar_status;
+		delete[] playercar_status;
 	} 
 
 	if (n_enemycars > 0) {
@@ -1964,7 +1964,7 @@ CReplayEvent::~CReplayEvent()
 			enemycar_status[i] = 0;
 		} 
 
-		delete enemycar_status;
+		delete[] enemycar_status;
 	} 
 } 
 

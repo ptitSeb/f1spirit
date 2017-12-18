@@ -397,9 +397,8 @@ int F1SpiritApp::menu_cycle(KEYBOARDSTATE *k)
 					menu_current_menu = 28;
 					break;
 
-#ifdef HAVE_C4A
-				case 13+210:	//Start C4A GAME
-					c4a_result = 0;
+				case 13+210:	//Start ARCADE / C4A GAME
+					arcade_result = 0;
 					for (int i=0; i<N_TRACKS; i++)
 						current_player->set_points(i, 0);
 					{
@@ -408,22 +407,18 @@ int F1SpiritApp::menu_cycle(KEYBOARDSTATE *k)
 						menu_multiplayer_n_enemycars = parameters.race_cars[menu_selected_track];
 						menu_multiplayer_enemy_speed = 0;
 					}
-#endif
+
 				case 13: { /* START GAME: */
-#ifdef HAVE_C4A
-						c4a = ((menu_option_type[browsing][menu_selected[browsing]])>210)?1:0;
-#endif
+						arcade = ((menu_option_type[browsing][menu_selected[browsing]])>210)?1:0;
 						/* Create the player(s) car(s): */
 						if (menu_selecting_player >= menu_selected_nplayers - 1) {
 							menu_fading = 3;
 							menu_fading_ctnt = 0;
 							menu_selected_car[menu_selecting_player] = menu_option_parameter[browsing][menu_selected[browsing]];
 						} else {
-#ifdef HAVE_C4A
 							if ((menu_option_type[browsing][menu_selected[browsing]])>210)
 								menu_current_menu = 4+210;
 							else
-#endif
 								menu_current_menu = 11;
 							menu_selected_car[menu_selecting_player] = menu_option_parameter[browsing][menu_selected[browsing]];
 						} 
@@ -2212,11 +2207,7 @@ int F1SpiritApp::menu_cycle(KEYBOARDSTATE *k)
 
 
 			/* Selecting PREVIOUS MADE CAR: */
-#ifdef HAVE_C4A
 			if ((menu_current_menu == 12) || (menu_current_menu == 222)) 
-#else
-			if (menu_current_menu == 12)
-#endif
 			{
 				int car_type = menu_selected_track;
 

@@ -277,9 +277,13 @@ F1SpiritApp::F1SpiritApp()
 
 #endif
 
+	arcade = 0;
+
 	menu_title[0] = 0;
 	menu_options[0] = 0;
 	menu_title[1] = 0;
+
+	menu_state = 0;
 	
 	menu_options[1] = 0;
 
@@ -337,6 +341,10 @@ F1SpiritApp::F1SpiritApp()
 	menu_piece_frame[3] = 0;
 	menu_piece_frame[4] = 0;
 	menu_piece_frame[5] = 0;
+
+	menu_selecting_player = 0;
+
+	menu_readme_move_y = 0;
 	
 	menu_showing_piece_type = -1;
 	menu_showing_piece = -1;

@@ -403,7 +403,7 @@ void F1SpiritGame::draw_rain(PlayerCCar *v, float rain_strength)
 
 
 // quick random for rain:
-#ifdef PANDORA
+#if defined(PANDORA) || defined(PYRA)
 #define RAIN_RANDOM_SIZE	99999
 #define RAIN_DROPS_PER_CYCLE	80
 #define RAIN_DROPS_SPAN	700

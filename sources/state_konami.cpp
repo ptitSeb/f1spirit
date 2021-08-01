@@ -60,7 +60,7 @@ int F1SpiritApp::konami_cycle(KEYBOARDSTATE *k)
 
 	if ((k->keyboard[SDLK_ESCAPE] && !k->old_keyboard[SDLK_ESCAPE]) ||
 	        (k->keyboard[SDLK_SPACE] && !k->old_keyboard[SDLK_SPACE])
-#ifdef PANDORA
+#if defined(PANDORA) || defined(PYRA)
 		||  (k->keyboard[SDLK_PAGEDOWN] && !k->old_keyboard[SDLK_PAGEDOWN]) 
 #endif
 		) {

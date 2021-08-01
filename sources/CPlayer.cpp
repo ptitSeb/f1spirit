@@ -83,7 +83,7 @@ CPlayerInfo::CPlayerInfo(void)
 
 	right[0] = SDLK_RIGHT;
 
-#ifdef PANDORA
+#if defined(PANDORA) || defined(PYRA)
 	accelerate[0] = SDLK_PAGEDOWN;
 
 	brake[0] = SDLK_END;
@@ -188,7 +188,7 @@ CPlayerInfo::CPlayerInfo(char *n, char *password)
 
 	right[0] = SDLK_RIGHT;
 
-#ifdef PANDORA
+#if defined(PANDORA) || defined(PYRA)
 	accelerate[0] = SDLK_PAGEDOWN;
 
 	brake[0] = SDLK_END;

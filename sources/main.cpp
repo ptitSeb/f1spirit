@@ -51,10 +51,16 @@ char *application_name = "F-1 Spirit";
 int application_version = 0;
 #ifdef PANDORA
 int SCREEN_X = 800;
+#elif defined(PYRA)
+int SCREEN_X = 1280;
 #else
 int SCREEN_X = 640;
 #endif
+#ifdef PYRA
+int SCREEN_Y = 720;
+#else
 int SCREEN_Y = 480;
+#endif
 int g_stencil_bits = 0;
 int N_SFX_CHANNELS = 16;
 int COLOUR_DEPTH = 32;
@@ -155,6 +161,10 @@ SDL_Surface *initialization(int flags)
 	fullscreen = true;
 	flags = SDL_FULLSCREEN;
 #else
+#ifdef PYRA
+        fullscreen = true;
+        flags = SDL_FULLSCREEN;
+#endif
 	flags = SDL_OPENGL | flags;
 #endif
 	screen = SDL_SetVideoMode((fullscreen)?desktopW:SCREEN_X, (fullscreen)?desktopH:SCREEN_Y, bpp, flags);

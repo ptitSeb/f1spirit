@@ -269,7 +269,7 @@ int F1SpiritApp::race_result_cycle(KEYBOARDSTATE *k)
 			} 
 
 			if ((k->keyboard[SDLK_SPACE] && !k->old_keyboard[SDLK_SPACE]) ||
-#ifdef PANDORA
+#if defined(PANDORA) || defined(PYRA)
 					(k->keyboard[SDLK_PAGEDOWN] && !k->old_keyboard[SDLK_PAGEDOWN]) ||
 #endif
 			        (k->keyboard[SDLK_RETURN] && !k->old_keyboard[SDLK_RETURN])) {

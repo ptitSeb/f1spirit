@@ -3685,7 +3685,9 @@ void F1SpiritGame::draw(bool draw_scoreboard)
 void F1SpiritGame::draw_dispersed_hud(PlayerCCar *v)
 {
 	char tmp[80];
-	#ifdef PANDORA
+	#if defined(PANDORA)
+	#define ADDX 80
+	#elif defined(PYRA)
 	#define ADDX 80
 	#else
 	#define ADDX 0

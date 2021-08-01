@@ -49,6 +49,9 @@ CC = gcc
 ifeq ($(ODROID),1)
  CFLAGS = -mcpu=cortex-a9 -mfpu=neon -mfloat-abi=hard -g3 -O3 -Wall `sdl-config --cflags` `curl-config --cflags` -I/usr/X11R6/include -Ithirdparty -DHAVE_GLES -D__USE_SDL_GLES__ -DODROID -fdiagnostics-color=auto
  LDFLAGS = `sdl-config --libs` `curl-config --libs` -L/usr/X11R6/lib/ -lSDL_image -lSDL_mixer -lSDL_net -lm -lstdc++ -lGLESv1_CM -lEGL
+else ifeq($(PYRA),1)
+ CFLAGS = -mcpu=cortex-a15 -mfpu=neon-vfpv4 -marm -mfloat-abi=hard -g3 -O3 -Wall `sdl-config --cflags` `curl-config --cflags` -I/usr/X11R6/include -Ithirdparty -DPYRA 
+ LDFLAGS = `sdl-config --libs` `curl-config --libs` -L/usr/X11R6/lib/ -lSDL_image -lSDL_mixer -lSDL_net -lm -lstdc++ -lGL
 else ifeq ($(LINUX),1)
  CFLAGS = -g3 -O3 -Wno-write-strings `sdl-config --cflags` `curl-config --cflags` -I/usr/X11R6/include
  LDFLAGS = `sdl-config --libs` `curl-config --libs` -L/usr/X11R6/lib/ -lSDL_image -lSDL_mixer -lSDL_net -lm -lstdc++ -lGL
